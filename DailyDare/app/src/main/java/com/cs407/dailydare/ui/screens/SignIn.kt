@@ -170,10 +170,8 @@ fun SignInScreen(
 @Preview(showBackground = true)
 @Composable
 fun SignInScreenPreview() {
-    // You can wrap your screen in your app's theme if you have one.
-    // For now, we will just call the screen directly.
     SignInScreen(
-        onNavigateToSignUp = {}, // For preview, we provide empty actions
+        onNavigateToSignUp = {},
         onNavigateToHome = {}
     )
 }
