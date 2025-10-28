@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">DailyDare</string>
+    <string name="login_slogan">"Sign in to join the fun!"</string>
+    <string name="login">Login</string>
+    <string name="sign_up">Sign Up</string>
 </resources>
