@@ -11,6 +11,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.cs407.dailydare.ui.screens.ChallengeScreen
+import com.cs407.dailydare.ui.screens.FeedScreen
+import com.cs407.dailydare.ui.screens.FriendsScreen
+import com.cs407.dailydare.ui.screens.NotificationsScreen
+import com.cs407.dailydare.ui.screens.PostScreen
+import com.cs407.dailydare.ui.screens.ProfileScreen
+import com.cs407.dailydare.ui.screens.SignInScreen
+import com.cs407.dailydare.ui.screens.SignUpScreen
 import com.cs407.dailydare.ui.theme.DailyDareTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +30,93 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             DailyDareTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                AppNavigation()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun AppNavigation() {
+    val navController = rememberNavController()
+    NavHost(
+        navController = navController,
+        startDestination = "SignIn" //Replace with below when implemented
+        // TODO If signed in go to feed else Sign in; add when local storage is added to check if signined
+        //startDestination = if (){ 
+        //     "SignIn"
+        //}else{
+        //     "Feed" 
+        //}
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    DailyDareTheme {
-        Greeting("Android")
+    ) {
+        composable("Feed") {
+            FeedScreen(
+                onNavigateToHome = { navController.navigate("Feed") },
+                onNavigateToFriends = { navController.navigate("Friends") },
+                onNavigateToChallenge = { navController.navigate("Challenge") },
+                onNavigationToProfile = { navController.navigate("Profile") },
+                onNavigateToNotifications = { navController.navigate("Notifications") }
+            )
+        }
+        composable("Challenge") {
+            ChallengeScreen(
+                onNavigateToHome = { navController.navigate("Feed") },
+                onNavigateToFriends = { navController.navigate("Friends") },
+                onNavigateToChallenge = { navController.navigate("Challenge") },
+                onNavigationToProfile = { navController.navigate("Profile") },
+                onNavigateToNotifications = { navController.navigate("Notifications") }
+            )
+        }
+        composable("Friends") {
+            FriendsScreen (
+                onNavigateToHome = { navController.navigate("Feed") },
+                onNavigateToFriends = { navController.navigate("Friends") },
+                onNavigateToChallenge = { navController.navigate("Challenge") },
+                onNavigationToProfile = { navController.navigate("Profile") },
+                onNavigateToNotifications = { navController.navigate("Notifications") }
+            )
+        }
+        composable("Notifications") {
+            NotificationsScreen(
+                onNavigateToHome = { navController.navigate("Feed") },
+                onNavigateToFriends = { navController.navigate("Friends") },
+                onNavigateToChallenge = { navController.navigate("Challenge") },
+                onNavigationToProfile = { navController.navigate("Profile") },
+                onNavigateToNotifications = { navController.navigate("Notifications") }
+            )
+        }
+        composable("Post") {
+            PostScreen(
+                onNavigateToHome = { navController.navigate("Feed") },
+                onNavigateToFriends = { navController.navigate("Friends") },
+                onNavigateToChallenge = { navController.navigate("Challenge") },
+                onNavigationToProfile = { navController.navigate("Profile") },
+                onNavigateToNotifications = { navController.navigate("Notifications") }
+            )
+        }
+        composable("Profile") {
+            ProfileScreen(
+                onNavigateToHome = { navController.navigate("Feed") },
+                onNavigateToFriends = { navController.navigate("Friends") },
+                onNavigateToChallenge = { navController.navigate("Challenge") },
+                onNavigationToProfile = { navController.navigate("Profile") },
+                onNavigateToNotifications = { navController.navigate("Notifications") }
+            )
+        }
+        composable("SignIn") {
+            SignInScreen(
+                onNavigateToSignUp = {navController.navigate("SignUp")},
+                onNavigateToHome = {navController.navigate("Feed")}
+
+            )
+        }
+        composable("SignUp") {
+            SignUpScreen(
+                onNavigateToFeed = {navController.navigate("SignUp")},
+                onNavigatetoSignIn = {navController.navigate("SignIn")}
+
+            )
+        }
     }
 }
