@@ -23,7 +23,7 @@ import com.cs407.dailydare.R // <-- Import your R file
 
 @Composable
 fun SignUpScreen(
-    onNavigateToSignIn: () -> Unit,
+    onNavigateToFeed: () -> Unit,
 ) {
     val backgroundColor = colorResource(id = R.color.app_background)
     val buttonColor = colorResource(id = R.color.button_primary)
@@ -105,7 +105,7 @@ fun SignUpScreen(
 
             // Sign Up button
             Button(
-                onClick = onNavigateToSignIn,
+                onClick = onNavigateToFeed,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -127,6 +127,6 @@ fun SignUpScreen(
 @Composable
 fun SignUpScreenPreview() {
     SignUpScreen(
-        onNavigateToSignIn = {}
+        onNavigateToFeed = {}
     )
 }
