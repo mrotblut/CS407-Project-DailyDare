@@ -14,6 +14,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.cs407.dailydare.ViewModels.UserViewModel
+import com.cs407.dailydare.data.UserState
 import com.cs407.dailydare.ui.screens.ChallengeScreen
 import com.cs407.dailydare.ui.screens.FeedScreen
 import com.cs407.dailydare.ui.screens.FriendsScreen
@@ -100,7 +102,9 @@ fun AppNavigation() {
                 onNavigateToHome = { navController.navigate("Feed") },
                 onNavigateToFriends = { navController.navigate("Friends") },
                 onNavigateToChallenge = { navController.navigate("Challenge") },
-                onNavigateToNotifications = { navController.navigate("Notifications") }
+                onNavigateToNotifications = { navController.navigate("Notifications")},
+                userState = UserState(),
+                onEditProfile = {} //TODO Implement edit functionality
             )
         }
         composable("SignIn") {

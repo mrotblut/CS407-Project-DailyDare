@@ -77,7 +77,7 @@ fun signIn(
                 result = SignInResult.Error
 
             } else{
-                onSignedIn(UserState(name = user.displayName!!, uid = user.uid))
+                onSignedIn(UserState(uid = user.uid))
             }
 
         }
@@ -111,26 +111,9 @@ fun createAccount(
                 result = SignUpResult.Error
                 return@addOnCompleteListener
             }
-            onSignedIn(UserState(uid = user.uid, name = ""))
+            onSignedIn(UserState(uid = user.uid))
         }
     return result
 }
 
 
-fun updateName(newName: String, userViewModel: UserViewModel, navToNote: () -> Unit) {
-    val user = Firebase.auth.currentUser
-
-    val profileUpdates = userProfileChangeRequest {
-        displayName = newName
-    }
-
-    user!!.updateProfile(profileUpdates)
-        .addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                userViewModel.setUser(UserState(newName,userViewModel.userState.value.uid))
-                navToNote()
-
-            }
-        }
-
-}
