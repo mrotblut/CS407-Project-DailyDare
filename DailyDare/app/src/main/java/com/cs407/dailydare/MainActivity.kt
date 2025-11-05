@@ -1,5 +1,7 @@
 package com.cs407.dailydare
 
+import androidx.compose.ui.res.painterResource
+import com.cs407.dailydare.R
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -65,7 +67,8 @@ fun AppNavigation() {
                 onNavigateToFriends = { navController.navigate("Friends") },
                 onNavigateToChallenge = { navController.navigate("Challenge") },
                 onNavigationToProfile = { navController.navigate("Profile") },
-                onNavigateToNotifications = { navController.navigate("Notifications") }
+                onNavigateToNotifications = { navController.navigate("Notifications") },
+                onNavigateToPost = { navController.navigate("Post") }
             )
         }
         composable("Friends") {
@@ -97,10 +100,20 @@ fun AppNavigation() {
         }
         composable("Profile") {
             ProfileScreen(
+                userName = "User",
+                userHandle = "@user",
+                streakCount = 0,
+                completedCount = 0,
+                friendsCount = 0,
+                profilePicture = painterResource(id = R.drawable.wireframe),
+                streakIcon = painterResource(id = R.drawable.flare_icon),
+                completedChallenges = emptyList(),
+                currentChallenges = emptyList(),
                 onNavigateToHome = { navController.navigate("Feed") },
                 onNavigateToFriends = { navController.navigate("Friends") },
                 onNavigateToChallenge = { navController.navigate("Challenge") },
-                onNavigateToNotifications = { navController.navigate("Notifications") }
+                onNavigateToNotifications = { navController.navigate("Notifications") },
+                onEditProfile = {}
             )
         }
         composable("SignIn") {
