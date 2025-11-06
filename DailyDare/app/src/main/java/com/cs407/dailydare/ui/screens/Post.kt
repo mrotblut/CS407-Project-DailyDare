@@ -159,10 +159,10 @@ fun PostScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Media selection buttons
-            Row(
+            // Media selection buttons - Stack vertically for better spacing
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Take Photo button
                 OutlinedButton(
@@ -172,16 +172,16 @@ fun PostScreen(
                                 context,
                                 Manifest.permission.CAMERA
                             ) -> {
-                                // Permission already granted
                                 cameraLauncher.launch(null)
                             }
                             else -> {
-                                // Request permission
                                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                             }
                         }
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = buttonColor
@@ -192,16 +192,16 @@ fun PostScreen(
                         contentDescription = "Camera",
                         modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Camera")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Take Photo")
                 }
-
-                Spacer(modifier = Modifier.width(12.dp))
 
                 // Choose from Gallery button
                 OutlinedButton(
                     onClick = { imagePickerLauncher.launch("image/*") },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = buttonColor
@@ -212,18 +212,18 @@ fun PostScreen(
                         contentDescription = "Gallery",
                         modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Gallery")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Choose from Gallery")
                 }
-
-                Spacer(modifier = Modifier.width(12.dp))
 
                 // Record Video button
                 OutlinedButton(
                     onClick = {
                         // TODO: Implement video recording
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = buttonColor
@@ -234,8 +234,8 @@ fun PostScreen(
                         contentDescription = "Video",
                         modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Video")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Record Video")
                 }
             }
 
