@@ -26,27 +26,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.dailydare.R
+import com.cs407.dailydare.data.Challenge
+import com.cs407.dailydare.data.UserState
 
-data class Challenge(
-    val id: Int,
-    val title: String,
-    val date: String,
-    val imageRes: Int
-)
 
 @Composable
 fun ProfileScreen(
     // TODO: Placeholder data to be passed in from a ViewModel and onClick actions
-    userName: String,
-    userHandle: String,
-    streakCount: Int,
-    completedCount: Int,
-    friendsCount: Int,
-    profilePicture: Painter,
-    streakIcon: Painter,
-    completedChallenges: List<Challenge>,
-    currentChallenges: List<Challenge>,
-
+    userState: UserState,
     // TODO: Navigation actions
     onNavigateToHome: () -> Unit,
     onNavigateToChallenge: () -> Unit,
@@ -54,8 +41,9 @@ fun ProfileScreen(
     onNavigateToNotifications: () -> Unit,
     onEditProfile: () -> Unit
 ) {
+
     var selectedTab by remember { mutableStateOf("Completed") }
-    val challengesToShow = if (selectedTab == "Completed") completedChallenges else currentChallenges
+    val challengesToShow = if (selectedTab == "Completed") userState.completedChallenges else userState.currentChallenges
 
     LazyColumn(
         modifier = Modifier
@@ -67,11 +55,11 @@ fun ProfileScreen(
         // Profile Header
         item {
             ProfileHeader(
-                userName = userName,
-                userHandle = userHandle,
-                profilePicture = profilePicture,
-                streakIcon = streakIcon,
-                onEditClick = onEditProfile
+                userName = userState.userName,
+                userHandle = userState.userHandle,
+                profilePicture = userState.profilePicture,
+                onEditClick = onEditProfile,
+                streakCount = userState.streakCount
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -79,9 +67,9 @@ fun ProfileScreen(
         // Stats
         item {
             StatsRow(
-                streakCount = streakCount.toString(),
-                completedCount = completedCount.toString(),
-                friendsCount = friendsCount.toString()
+                streakCount = userState.streakCount.toString(),
+                completedCount = userState.completedCount.toString(),
+                friendsCount = userState.friendsCount.toString()
             )
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -119,18 +107,19 @@ fun ProfileScreen(
     }
 }
 
+
 @Composable
 fun ProfileHeader(
     userName: String,
     userHandle: String,
-    profilePicture: Painter,
-    streakIcon: Painter,
+    profilePicture: Painter?,
+    streakCount: Int,
     onEditClick: () -> Unit
 ) {
     val buttonColor = colorResource(id = R.color.button_primary)
     Box(contentAlignment = Alignment.TopCenter) {
         Image(
-            painter = profilePicture,
+            painter = profilePicture ?: painterResource(id = R.drawable.default_user),
             contentDescription = "Profile Picture",
             modifier = Modifier
                 .size(120.dp)
@@ -159,17 +148,16 @@ fun ProfileHeader(
         Text(text = userName, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Black)
         Spacer(modifier = Modifier.width(4.dp))
         Icon(
-            painter = streakIcon,
+            painter = painterResource(id = R.drawable.flare_icon),
             contentDescription = "Streak Flame",
             tint = Color.Black,
             modifier = Modifier.size(24.dp)
         )
-        Text(text = "<Streak #>", fontSize = 14.sp, color = Color.Gray)
+        Text(text = streakCount.toString(), fontSize = 14.sp, color = Color.Gray)
     }
 
     Text(text = userHandle, fontSize = 16.sp, color = Color.Gray)
 }
-
 @Composable
 fun StatsRow(streakCount: String, completedCount: String, friendsCount: String) {
     Row(
@@ -251,21 +239,20 @@ fun ChallengeCard(imageRes: Int, title: String, date: String) {
 @Composable
 fun ProfileScreenPreview() {
     val sampleCompletedChallenges = listOf(
-        Challenge(1, "Do 10 jumping jacks in a funny place", "Completed: Oct 26, 2023", R.drawable.wireframe),
-        Challenge(2, "Recreate a famous movie scene", "Completed: Oct 25, 2023", R.drawable.wireframe),
-        Challenge(3, "Build a pillow fort", "Completed: Oct 24, 2023", R.drawable.wireframe)
+        Challenge(1, "Do 10 jumping jacks in a funny place", "Completed: Oct 26, 2023", R.drawable.logo),
+        Challenge(2, "Recreate a famous movie scene", "Completed: Oct 25, 2023", R.drawable.logo),
+        Challenge(3, "Build a pillow fort", "Completed: Oct 24, 2023", R.drawable.logo)
     )
 
     ProfileScreen(
+        UserState(
         userName = "IShowSpeed",
         userHandle = "@IShowSpeed",
         streakCount = 1,
         completedCount = 2,
         friendsCount = 3,
-        profilePicture = painterResource(id = R.drawable.wireframe),
-        streakIcon = painterResource(id = R.drawable.flare_icon),
         completedChallenges = sampleCompletedChallenges,
-        currentChallenges = emptyList(),
+        currentChallenges = emptyList()),
         onNavigateToHome = {},
         onNavigateToChallenge = {},
         onNavigateToFriends = {},
