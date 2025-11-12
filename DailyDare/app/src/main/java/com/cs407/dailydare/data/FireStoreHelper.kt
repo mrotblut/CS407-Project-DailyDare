@@ -1,9 +1,11 @@
 package com.cs407.dailydare.data
 
 import android.util.Log
+import androidx.core.os.registerForAllProfilingResults
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
+import java.time.LocalDate
 
 fun getFriends(uid:String): List<String>{
     val db = Firebase.firestore
@@ -21,14 +23,19 @@ fun getFriends(uid:String): List<String>{
 
 fun getUserData(uid: String): UserState{
     val db = Firebase.firestore
-
+    var userInfo: firestoreUser? = null
     val docRef = db.collection("users").document(uid)
-        docRef.get().addOnSuccessListener { documentSnapshot  ->
-            val userInfo = documentSnapshot.toObject<firestoreUser>()
+    docRef.get().addOnCompleteListener  { task  ->
+        if (task.isSuccessful) {
+            userInfo = task.result.toObject<firestoreUser>()!!
+
         }
 
-    val userInfo = firestoreUser()
+    }
+
+    val completedChallenges = getChallenges(userInfo!!.completedChallengeRef)
     val friends = getFriends(userInfo.uid)
+
     return UserState(
         uid = userInfo.uid,
         userName = userInfo.userName,
@@ -36,28 +43,44 @@ fun getUserData(uid: String): UserState{
         streakCount = userInfo.streakCount,
         completedCount = userInfo.completedCount,
         friendsCount = friends.size,
-        profilePicture = TODO(),
-        completedChallenges = TODO(),
-        currentChallenges = TODO(),
+        profilePicture = null, //TODO: get image after figure out image storage userInfo.profilePicture,
+        completedChallenges = completedChallenges,
+        currentChallenges = getTodayChallenge(),
         friendsUID = friends
     )
 }
 
-fun setUserData(uid: String){
+fun createDbUser(uid:String) : UserState{
     val db = Firebase.firestore
-    val user = hashMapOf(
-        "first" to "Ada",
-        "last" to "Lovelace",
-        "born" to 1815,
+    val userState = UserState(
+        uid = uid,
+        userName = "Anonymous User",
+        userHandle = "Anonymous_User_"+uid.filter{it.isDigit()},
+        streakCount = 0,
+        completedCount = 0,
+        friendsCount = 0,
+        profilePicture = null,
+        completedChallenges = emptyList(),
+        currentChallenges = getTodayChallenge(),
+        friendsUID = emptyList()
     )
+    db.collection("users").document(uid).set(userState)
+    return userState
+}
 
-// Add a new document with a generated ID
-    db.collection("users")
-        .add(user)
-        .addOnSuccessListener { documentReference ->
-            Log.d("SetUserData", "DocumentSnapshot added with ID: ${documentReference.id}")
-        }
-        .addOnFailureListener { e ->
-            Log.w("SetUserData", "Error adding document", e)
-        }
+fun updateUserData(userState:UserState){
+    TODO()
+}
+
+fun getChallenges(challenges: List<String>):List<Challenge>{
+    return emptyList()
+}
+
+fun getTodayChallenge(): Challenge{
+    return Challenge(
+        id = 0,
+        title =" Do 10 jumping jacks",
+        date = "11/12/2025",
+        imageRes = ""
+    )
 }

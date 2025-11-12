@@ -8,7 +8,8 @@ data class firestoreUser(
     val userHandle: String = "",
     val streakCount: Int = 0,
     val completedCount: Int = 0,
-    val profilePicture: String = ""
+    val profilePicture: String = "",
+    val completedChallengeRef: List<String> = emptyList<String>()
 )
 
 data class firestoreFriends(
@@ -21,10 +22,14 @@ data class firestoreFriendRequest(
 )
 
 data class firestoreUserChallenges(
-    val ChallengeID: String,
+    val ChallengeID: Int,
     val UserUID: String,
     val completed: Boolean,
-    val date: Date
+    val date: Date,
+    val imageRes: String,
+    val title: String,
+    val description: String,
+    val postPicture: String?
 )
 
 data class firestoreChallenge(

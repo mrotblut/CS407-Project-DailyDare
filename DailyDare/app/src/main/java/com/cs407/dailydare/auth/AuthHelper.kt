@@ -2,6 +2,8 @@ package com.cs407.dailydare.auth
 
 import com.cs407.dailydare.ViewModels.UserViewModel
 import com.cs407.dailydare.data.UserState
+import com.cs407.dailydare.data.createDbUser
+import com.cs407.dailydare.data.getUserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
@@ -77,7 +79,7 @@ fun signIn(
                 result = SignInResult.Error
 
             } else{
-                onSignedIn(UserState(uid = user.uid))
+                onSignedIn(getUserData(uid = user.uid))
             }
 
         }
@@ -111,7 +113,7 @@ fun createAccount(
                 result = SignUpResult.Error
                 return@addOnCompleteListener
             }
-            onSignedIn(UserState(uid = user.uid))
+            onSignedIn(createDbUser(uid = user.uid))
         }
     return result
 }
