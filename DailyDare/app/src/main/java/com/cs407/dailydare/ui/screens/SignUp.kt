@@ -2,7 +2,11 @@ package com.cs407.dailydare.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -23,7 +27,7 @@ import com.cs407.dailydare.R // <-- Import your R file
 
 @Composable
 fun SignUpScreen(
-    onNavigateToFeed: () -> Unit,
+    onNavigateToSignIn: () -> Unit,
 ) {
     val backgroundColor = colorResource(id = R.color.app_background)
     val buttonColor = colorResource(id = R.color.button_primary)
@@ -40,6 +44,21 @@ fun SignUpScreen(
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.Center
     ) {
+        IconButton(
+            onClick = onNavigateToSignIn,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(top = 40.dp)
+                .size(36.dp)
+                .background(Color.White.copy(alpha = 0.8f), CircleShape)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = colorResource(id = R.color.black)
+            )
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -103,9 +122,9 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Sign Up button
+            // Sign Up button, successful sign up takes user back to sign in
             Button(
-                onClick = onNavigateToFeed,
+                onClick = onNavigateToSignIn,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -127,6 +146,6 @@ fun SignUpScreen(
 @Composable
 fun SignUpScreenPreview() {
     SignUpScreen(
-        onNavigateToFeed = {}
+        onNavigateToSignIn = {},
     )
 }

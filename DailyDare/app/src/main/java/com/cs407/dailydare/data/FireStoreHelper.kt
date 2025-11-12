@@ -81,6 +81,6 @@ fun getTodayChallenge(): Challenge{
         id = 0,
         title =" Do 10 jumping jacks",
         date = "11/12/2025",
-        imageRes = ""
+        imageRes = 0
     )
 }
