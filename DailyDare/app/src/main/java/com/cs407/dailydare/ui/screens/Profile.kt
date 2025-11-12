@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.cs407.dailydare.R
 import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.data.UserState
+import com.cs407.dailydare.ui.components.BottomNavigationBar
 
 
 @Composable
@@ -39,70 +40,103 @@ fun ProfileScreen(
     onNavigateToChallenge: () -> Unit,
     onNavigateToFriends: () -> Unit,
     onNavigateToNotifications: () -> Unit,
+    onNavigateToProfile:() -> Unit,
     onEditProfile: () -> Unit
 ) {
-
     var selectedTab by remember { mutableStateOf("Completed") }
-    val challengesToShow = if (selectedTab == "Completed") userState.completedChallenges else userState.currentChallenges
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colorResource(id = R.color.app_background))
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Profile Header
-        item {
-            ProfileHeader(
-                userName = userState.userName,
-                userHandle = userState.userHandle,
-                profilePicture = userState.profilePicture,
-                onEditClick = onEditProfile,
-                streakCount = userState.streakCount
+    val challengesToShow = if (selectedTab == "Completed") {
+        userState.completedChallenges
+    } else {
+        listOf(userState.currentChallenges)
+    }
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToFriends = onNavigateToFriends,
+                onNavigateToChallenge = onNavigateToChallenge,
+                onNavigateToNotifications = onNavigateToNotifications,
+                onNavigateToProfile = onNavigateToProfile,
+                currentScreen = "Profile"
             )
-            Spacer(modifier = Modifier.height(24.dp))
-        }
+        },
+        containerColor = colorResource(id = R.color.app_background)
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(colorResource(id = R.color.app_background))
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(colorResource(id = R.color.app_background))
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Profile Header
+                item {
+                    ProfileHeader(
+                        userName = userState.userName,
+                        userHandle = userState.userHandle,
+                        profilePicture = userState.profilePicture,
+                        onEditClick = onEditProfile,
+                        streakCount = userState.streakCount
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
 
-        // Stats
-        item {
-            StatsRow(
-                streakCount = userState.streakCount.toString(),
-                completedCount = userState.completedCount.toString(),
-                friendsCount = userState.friendsCount.toString()
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-        }
+                // Stats
+                item {
+                    StatsRow(
+                        streakCount = userState.streakCount.toString(),
+                        completedCount = userState.completedCount.toString(),
+                        friendsCount = userState.friendsCount.toString()
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
 
-        // My Challenges
-        item {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "My Challenges",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+                // My Challenges
+                item {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "My Challenges",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                // Complete and current Buttons
-                Row {
-                    TabButton("Completed", selectedTab == "Completed") { selectedTab = "Completed" }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TabButton("Current", selectedTab == "Current") { selectedTab = "Current" }
+                        // Complete and current Buttons
+                        Row {
+                            TabButton("Completed", selectedTab == "Completed") { selectedTab = "Completed" }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            TabButton("Current", selectedTab == "Current") { selectedTab = "Current" }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                if (challengesToShow.isEmpty()) {
+                    item {
+                        Text("No challenges to display", color = Color.Gray)
+                    }
+                }
+                else {
+                    items(challengesToShow) { challenge ->
+                        ChallengeCard(
+                            imageRes = challenge.imageRes,
+                            title = challenge.title,
+                            date = challenge.date
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // Challenges List
-        items(challengesToShow) { challenge ->
-            ChallengeCard(
-                imageRes = challenge.imageRes,
-                title = challenge.title,
-                date = challenge.date
-            )
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -239,24 +273,32 @@ fun ChallengeCard(imageRes: Int, title: String, date: String) {
 @Composable
 fun ProfileScreenPreview() {
     val sampleCompletedChallenges = listOf(
-        Challenge(1, "Do 10 jumping jacks in a funny place", "Completed: Oct 26, 2023", R.drawable.logo),
-        Challenge(2, "Recreate a famous movie scene", "Completed: Oct 25, 2023", R.drawable.logo),
-        Challenge(3, "Build a pillow fort", "Completed: Oct 24, 2023", R.drawable.logo)
+        Challenge(1, "Do 10 jumping jacks in a funny place", "Completed: Oct 26, 2023", R.drawable.wireframe),
+        Challenge(2, "Recreate a famous movie scene", "Completed: Oct 25, 2023", R.drawable.wireframe),
+        Challenge(3, "Build a pillow fort", "Completed: Oct 24, 2023", R.drawable.wireframe)
+    )
+
+    val sampleCurrentChallenge = Challenge(4, "Try a new hobby for 1 hour", "Due: Nov 15, 2023", R.drawable.wireframe)
+
+
+    val sampleUser = UserState(
+        userName = "IShowSpeed",
+        userHandle = "@IShowSpeed",
+        streakCount = 7,
+        completedCount = sampleCompletedChallenges.size,
+        friendsCount = 12,
+        completedChallenges = sampleCompletedChallenges,
+        currentChallenges = sampleCurrentChallenge,
+        profilePicture = painterResource(id = R.drawable.default_user)
     )
 
     ProfileScreen(
-        UserState(
-        userName = "IShowSpeed",
-        userHandle = "@IShowSpeed",
-        streakCount = 1,
-        completedCount = 2,
-        friendsCount = 3,
-        completedChallenges = sampleCompletedChallenges,
-        currentChallenges = emptyList()),
+        userState = sampleUser,
         onNavigateToHome = {},
         onNavigateToChallenge = {},
         onNavigateToFriends = {},
         onNavigateToNotifications = {},
+        onNavigateToProfile = {},
         onEditProfile = {}
     )
 }
