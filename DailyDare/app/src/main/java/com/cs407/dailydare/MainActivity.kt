@@ -1,5 +1,7 @@
 package com.cs407.dailydare
 
+import androidx.compose.ui.res.painterResource
+import com.cs407.dailydare.R
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,8 +16,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.cs407.dailydare.ViewModels.UserViewModel
-import com.cs407.dailydare.data.UserState
 import com.cs407.dailydare.ui.screens.ChallengeScreen
 import com.cs407.dailydare.ui.screens.FeedScreen
 import com.cs407.dailydare.ui.screens.FriendsScreen
@@ -67,7 +67,8 @@ fun AppNavigation() {
                 onNavigateToFriends = { navController.navigate("Friends") },
                 onNavigateToChallenge = { navController.navigate("Challenge") },
                 onNavigationToProfile = { navController.navigate("Profile") },
-                onNavigateToNotifications = { navController.navigate("Notifications") }
+                onNavigateToNotifications = { navController.navigate("Notifications") },
+                onNavigateToPost = { navController.navigate("Post") }
             )
         }
         composable("Friends") {
@@ -99,12 +100,20 @@ fun AppNavigation() {
         }
         composable("Profile") {
             ProfileScreen(
+                userName = "User",
+                userHandle = "@user",
+                streakCount = 0,
+                completedCount = 0,
+                friendsCount = 0,
+                profilePicture = painterResource(id = R.drawable.wireframe),
+                streakIcon = painterResource(id = R.drawable.flare_icon),
+                completedChallenges = emptyList(),
+                currentChallenges = emptyList(),
                 onNavigateToHome = { navController.navigate("Feed") },
                 onNavigateToFriends = { navController.navigate("Friends") },
                 onNavigateToChallenge = { navController.navigate("Challenge") },
-                onNavigateToNotifications = { navController.navigate("Notifications")},
-                userState = UserState(),
-                onEditProfile = {} //TODO Implement edit functionality
+                onNavigateToNotifications = { navController.navigate("Notifications") },
+                onEditProfile = {}
             )
         }
         composable("SignIn") {
