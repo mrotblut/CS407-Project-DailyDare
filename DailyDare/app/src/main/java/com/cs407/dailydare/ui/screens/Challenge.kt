@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.dailydare.R
+import com.cs407.dailydare.ui.components.BottomNavigationBar
 
 @Composable
 fun ChallengeScreen(
@@ -46,10 +43,10 @@ fun ChallengeScreen(
         bottomBar = {
             BottomNavigationBar(
                 onNavigateToHome = onNavigateToHome,
-                onNavigateToChallenge = onNavigateToChallenge,
                 onNavigateToFriends = onNavigateToFriends,
+                onNavigateToChallenge = onNavigateToChallenge,
                 onNavigateToNotifications = onNavigateToNotifications,
-                onNavigationToProfile = onNavigationToProfile,
+                onNavigateToProfile = onNavigationToProfile,
                 currentScreen = "Challenge"
             )
         },
@@ -169,106 +166,7 @@ fun ChallengeScreen(
     }
 }
 
-@Composable
-fun BottomNavigationBar(
-    onNavigateToHome: () -> Unit,
-    onNavigateToChallenge: () -> Unit,
-    onNavigateToFriends: () -> Unit,
-    onNavigateToNotifications: () -> Unit,
-    onNavigationToProfile: () -> Unit,
-    currentScreen: String
-) {
-    val buttonColor = colorResource(id = R.color.button_primary)
-
-    NavigationBar(
-        containerColor = Color.White,
-        contentColor = Color.Gray,
-        modifier = Modifier.height(80.dp)
-    ) {
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.People,
-                    contentDescription = "Friends",
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            selected = currentScreen == "Friends",
-            onClick = onNavigateToFriends,
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = buttonColor,
-                unselectedIconColor = Color.Gray,
-                indicatorColor = Color.Transparent
-            )
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.Home,
-                    contentDescription = "Home",
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            selected = currentScreen == "Home",
-            onClick = onNavigateToHome,
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = buttonColor,
-                unselectedIconColor = Color.Gray,
-                indicatorColor = Color.Transparent
-            )
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.CameraAlt,
-                    contentDescription = "Challenge",
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            selected = currentScreen == "Challenge",
-            onClick = onNavigateToChallenge,
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = buttonColor,
-                unselectedIconColor = Color.Gray,
-                indicatorColor = Color.Transparent
-            )
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.Notifications,
-                    contentDescription = "Notifications",
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            selected = currentScreen == "Notifications",
-            onClick = onNavigateToNotifications,
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = buttonColor,
-                unselectedIconColor = Color.Gray,
-                indicatorColor = Color.Transparent
-            )
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    Icons.Default.Person,
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            selected = currentScreen == "Profile",
-            onClick = onNavigationToProfile,
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = buttonColor,
-                unselectedIconColor = Color.Gray,
-                indicatorColor = Color.Transparent
-            )
-        )
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFF8F8FF)
+@Preview(showBackground = true)
 @Composable
 fun ChallengeScreenPreview() {
     ChallengeScreen(

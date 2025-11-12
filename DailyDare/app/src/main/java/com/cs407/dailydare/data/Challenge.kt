@@ -4,5 +4,5 @@ data class Challenge(
     val id: Int,
     val title: String,
     val date: String,
-    val imageRes: String
+    val imageRes: Int,
 )

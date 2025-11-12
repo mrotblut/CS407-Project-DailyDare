@@ -11,11 +11,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.cs407.dailydare.ViewModels.UserViewModel
 import com.cs407.dailydare.ui.screens.ChallengeScreen
 import com.cs407.dailydare.ui.screens.FeedScreen
 import com.cs407.dailydare.ui.screens.FriendsScreen
@@ -41,6 +45,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
+    // get viewmodel and collect userState
+    val userViewModel: UserViewModel = viewModel()
+    val userState by userViewModel.userState.collectAsState()
+
     NavHost(
         navController = navController,
         startDestination = "SignIn" //Replace with below when implemented
@@ -100,19 +109,12 @@ fun AppNavigation() {
         }
         composable("Profile") {
             ProfileScreen(
-                userName = "User",
-                userHandle = "@user",
-                streakCount = 0,
-                completedCount = 0,
-                friendsCount = 0,
-                profilePicture = painterResource(id = R.drawable.wireframe),
-                streakIcon = painterResource(id = R.drawable.flare_icon),
-                completedChallenges = emptyList(),
-                currentChallenges = emptyList(),
+                userState = userState,
                 onNavigateToHome = { navController.navigate("Feed") },
                 onNavigateToFriends = { navController.navigate("Friends") },
                 onNavigateToChallenge = { navController.navigate("Challenge") },
                 onNavigateToNotifications = { navController.navigate("Notifications") },
+                onNavigateToProfile = { navController.navigate("Profile") },
                 onEditProfile = {}
             )
         }
@@ -125,8 +127,7 @@ fun AppNavigation() {
         }
         composable("SignUp") {
             SignUpScreen(
-                onNavigateToFeed = {navController.navigate("SignUp")}
-
+                onNavigateToSignIn = {navController.navigate("SignIn")}
             )
         }
     }
