@@ -84,3 +84,7 @@ fun getTodayChallenge(): Challenge{
         imageRes = 0
     )
 }
+
+suspend fun getFeedPosts(friendsUIDs: List<String>, currentUserUID: String): List<firestoreUserChallenges> {
+    return emptyList()
+}

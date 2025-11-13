@@ -3,6 +3,7 @@ package com.cs407.dailydare.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -29,9 +30,11 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
 import com.cs407.dailydare.ui.components.BottomNavigationBar
+import com.cs407.dailydare.data.UserState
+import com.cs407.dailydare.data.getFeedPosts
+import com.cs407.dailydare.data.firestoreUserChallenges
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
-import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -59,7 +62,7 @@ fun FeedScreen(
     onNavigateToFriends: () -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigationToProfile: () -> Unit,
-    currentUserId: String = ""
+    userState: UserState = UserState()
 ) {
     var posts by remember { mutableStateOf<List<FeedPost>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -69,13 +72,13 @@ fun FeedScreen(
     fun refreshPosts() {
         coroutineScope.launch {
             isRefreshing = true
-            posts = loadFeedPosts(currentUserId)
+            posts = loadFeedPosts(userState)
             isRefreshing = false
         }
     }
 
     LaunchedEffect(Unit) {
-        posts = loadFeedPosts(currentUserId)
+        posts = loadFeedPosts(userState)
         isLoading = false
     }
 
@@ -102,35 +105,6 @@ fun FeedScreen(
                     modifier = Modifier.align(Alignment.Center),
                     color = colorResource(id = R.color.button_primary)
                 )
-            } else if (posts.isEmpty()) {
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = {
-                        refreshPosts()
-                    },
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "No posts yet",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Add friends to see their posts!",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
-                }
             } else {
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
@@ -143,26 +117,109 @@ fun FeedScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        items(posts) { post ->
-                            FeedPostCard(
-                                post = post,
-                                onLikeClick = { postId ->
-                                    posts = posts.map {
-                                        if (it.postId == postId) {
-                                            it.copy(
-                                                isLiked = !it.isLiked,
-                                                likes = if (it.isLiked) it.likes - 1 else it.likes + 1
-                                            )
-                                        } else it
-                                    }
-                                },
-                                onCommentClick = { },
-                                onShareClick = { }
+                        item {
+                            CurrentChallengeCard(
+                                challengeTitle = userState.currentChallenges.title,
+                                onChallengeClick = onNavigateToChallenge
                             )
+                        }
+
+                        if (posts.isEmpty()) {
+                            item {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "No posts yet",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Gray
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Add friends to see their posts!",
+                                        fontSize = 14.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                        } else {
+                            items(posts) { post ->
+                                FeedPostCard(
+                                    post = post,
+                                    onLikeClick = { postId ->
+                                        posts = posts.map {
+                                            if (it.postId == postId) {
+                                                it.copy(
+                                                    isLiked = !it.isLiked,
+                                                    likes = if (it.isLiked) it.likes - 1 else it.likes + 1
+                                                )
+                                            } else it
+                                        }
+                                    },
+                                    onCommentClick = { },
+                                    onShareClick = { }
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun CurrentChallengeCard(
+    challengeTitle: String,
+    onChallengeClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onChallengeClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = colorResource(id = R.color.button_primary)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "TODAY'S CHALLENGE",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                letterSpacing = 1.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = challengeTitle,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "Tap to complete the challenge!",
+                fontSize = 14.sp,
+                color = Color.White.copy(alpha = 0.9f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
         }
     }
 }
@@ -340,64 +397,33 @@ fun FeedPostCard(
     }
 }
 
-suspend fun loadFeedPosts(currentUserId: String): List<FeedPost> {
+suspend fun loadFeedPosts(userState: UserState): List<FeedPost> {
     return try {
         val db = Firebase.firestore
         val posts = mutableListOf<FeedPost>()
 
-        val friendsList = mutableListOf<String>()
-        if (currentUserId.isNotEmpty()) {
-            val friendsSnapshot = db.collection("friends")
-                .whereArrayContains("uid", currentUserId)
-                .get()
-                .await()
+        val firestorePosts = getFeedPosts(userState.friendsUID, userState.uid)
 
-            for (friendDoc in friendsSnapshot.documents) {
-                val uidList = friendDoc.get("uid") as? List<String> ?: emptyList()
-                for (uid in uidList) {
-                    if (uid != currentUserId) {
-                        friendsList.add(uid)
-                    }
-                }
-            }
-        }
-
-        val querySnapshot = db.collection("userChallenges")
-            .whereEqualTo("completed", true)
-            .get()
-            .await()
-
-        for (document in querySnapshot.documents) {
-            val userId = document.getString("UserUID") ?: ""
-
-            if (currentUserId.isNotEmpty() && userId !in friendsList && userId != currentUserId) {
-                continue
-            }
-
-            val challengeTitle = document.getString("title") ?: ""
-            val description = document.getString("description") ?: ""
-            val postPicture = document.getString("postPicture") ?: ""
-            val timestamp = document.getLong("timestamp") ?: 0L
-
-            val userDoc = db.collection("users").document(userId).get().await()
+        for (postData in firestorePosts) {
+            val userDoc = db.collection("users").document(postData.UserUID).get().await()
             val userName = userDoc.getString("userName") ?: "Unknown User"
             val userHandle = userDoc.getString("userHandle") ?: "unknown"
             val profilePicture = userDoc.getString("profilePicture") ?: ""
 
             posts.add(
                 FeedPost(
-                    postId = document.id,
-                    userId = userId,
+                    postId = "",
+                    userId = postData.UserUID,
                     userName = userName,
                     userHandle = userHandle,
                     profilePicture = profilePicture,
-                    challengeTitle = challengeTitle,
-                    challengeDescription = description,
-                    postImageUrl = postPicture,
-                    caption = description,
+                    challengeTitle = postData.title,
+                    challengeDescription = postData.description,
+                    postImageUrl = postData.postPicture ?: "",
+                    caption = postData.description,
                     likes = (0..50).random(),
                     comments = (0..20).random(),
-                    timestamp = timestamp,
+                    timestamp = postData.date.time,
                     isLiked = false
                 )
             )
