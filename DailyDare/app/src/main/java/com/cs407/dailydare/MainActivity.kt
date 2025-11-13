@@ -104,9 +104,16 @@ fun AppNavigation() {
                 onNavigateToFriends = { navController.navigate("Friends") },
                 onNavigateToChallenge = { navController.navigate("Challenge") },
                 onNavigationToProfile = { navController.navigate("Profile") },
-                onNavigateToNotifications = { navController.navigate("Notifications") }
+                onNavigateToNotifications = { navController.navigate("Notifications") },
+                onPost = { caption, imageUrl ->
+                    // TODO: Save to Firestore
+                    // Create firestoreUserChallenges object with:
+                    // - postPicture = imageUrl (the ImgBB URL string)
+                    // - other challenge fields
+                    // Then save to Firestore
+                    println("Caption: $caption, Image URL: $imageUrl")
+                }
             )
-        }
         composable("Profile") {
             ProfileScreen(
                 userState = userState,
