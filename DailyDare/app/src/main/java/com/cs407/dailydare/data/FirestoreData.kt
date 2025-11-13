@@ -37,3 +37,13 @@ data class firestoreChallenge(
     val imageRes: String,
     val title: String
 )
+
+data class firestorePost(
+    val uid: String,
+    val title: String,
+    val caption: String,
+    val date: Date,
+    val contentUri: String,
+    val likes: List<String>,
+    val postId: String
+)
