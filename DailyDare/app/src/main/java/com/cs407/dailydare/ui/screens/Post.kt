@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
+import com.cs407.dailydare.utils.PhotoUploadManager
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -44,7 +46,7 @@ fun PostScreen(
     onNavigationToProfile: () -> Unit,
     // TODO: Add parameters for challenge data
     challengeTitle: String = "Do 10 jumping jacks",
-    onPost: (String, Uri?) -> Unit = { _, _ -> } // Caption and media URI
+    onPost: (String, String?) -> Unit = { _, _ -> } // Caption and media URI
 ) {
     val backgroundColor = colorResource(id = R.color.app_background)
     val buttonColor = colorResource(id = R.color.button_primary)
@@ -53,8 +55,11 @@ fun PostScreen(
     var caption by remember { mutableStateOf(TextFieldValue("")) }
     var selectedMediaUri by remember { mutableStateOf<Uri?>(null) }
     var showMediaOptions by remember { mutableStateOf(false) }
+    var isUploading by remember { mutableStateOf(false) }
+    var uploadError by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     // Camera permission launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
@@ -263,25 +268,56 @@ fun PostScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // Error message
+            if (uploadError != null) {
+                Text(
+                    text = uploadError!!,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
             // Post button
             Button(
                 onClick = {
-                    onPost(caption.text, selectedMediaUri)
-                    onNavigateToHome()
+                    if (selectedMediaUri != null) {
+                        isUploading = true
+                        uploadError = null
+
+                        PhotoUploadManager.uploadPhoto(context, selectedMediaUri!!) { imageUrl ->
+                            isUploading = false
+
+                            if (imageUrl != null) {
+                                onPost(caption.text, imageUrl)
+                                onNavigateToHome()
+                            } else {
+                                uploadError = "Upload failed. Check your internet connection."
+                            }
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                 shape = RoundedCornerShape(28.dp),
-                enabled = selectedMediaUri != null // Only enable if media is selected
+                enabled = selectedMediaUri != null && !isUploading
             ) {
-                Text(
-                    text = "Post",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                if (isUploading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Post",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
