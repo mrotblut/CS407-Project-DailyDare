@@ -8,7 +8,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
 import com.google.firebase.auth.userProfileChangeRequest
-
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 enum class EmailResult {
@@ -79,7 +81,8 @@ fun signIn(
                 result = SignInResult.Error
 
             } else{
-                onSignedIn(getUserData(uid = user.uid))
+                val scope = CoroutineScope(Dispatchers.IO)
+                scope.launch{getUserData(uid = user.uid,onSignedIn)}
             }
 
         }
@@ -113,7 +116,8 @@ fun createAccount(
                 result = SignUpResult.Error
                 return@addOnCompleteListener
             }
-            onSignedIn(createDbUser(uid = user.uid))
+            val scope = CoroutineScope(Dispatchers.IO)
+            scope.launch{createDbUser(uid = user.uid,onSignedIn)}
         }
     return result
 }
