@@ -1,42 +1,68 @@
 package com.cs407.dailydare.data
 
 import android.util.Log
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.core.os.registerForAllProfilingResults
+import com.cs407.dailydare.utils.PhotoUploadManager.fetchPainter
+import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Date
+import kotlin.String
 
-fun getFriends(uid:String): List<String>{
+
+suspend fun getFriends(uid: String) : List<String> {
     val db = Firebase.firestore
-    var friends = emptyList<String>()
-    val docRef = db.collection("friends").whereArrayContains("uid",uid)
-    docRef.get().addOnSuccessListener { documentSnapshot  ->
-        for (i in documentSnapshot){
-            val friendList = i.toObject<List<String>>()
-            val friend = if (friendList[0] == uid){friendList[1]}else{friendList[0]}
-            friends = friends+friend
+
+    val querySnapshot = db.collection("friends")
+        .whereArrayContains("UID", uid).get().await()
+
+            val friends = mutableListOf<String>()
+
+            for (doc in querySnapshot) {
+                // Get the array field "UID" as a list
+                val friendList = doc.get("UID") as? List<String> ?: emptyList()
+                Log.w("getFriends",friendList.toString())
+
+                if (friendList.size == 2) {
+                    val friend = if (friendList[0] == uid) {
+                        friendList[1]
+                    } else {
+                        friendList[0]
+                    }
+                    friends.add(friend)
+                }
             }
+            Log.w("getFriends",friends.toString())
+            return(friends)
         }
-    return friends
-    }
 
-fun getUserData(uid: String, updateUser: (UserState) -> Unit){
+
+
+suspend fun getUserData(uid: String, updateUser: (UserState) -> Unit){
     val db = Firebase.firestore
-    var userInfo: firestoreUser? = null
     val docRef = db.collection("users").document(uid)
-    docRef.get().addOnCompleteListener  { task  ->
-        if (task.isSuccessful) {
-            userInfo = task.result.toObject<firestoreUser>()!!
+    val task = docRef.get().await()
+    val userInfo = task.toObject<firestoreUser>()!!
+    val completedChallenges = getChallenges(userInfo.completedChallengeRef)
+    val friends = getFriends(uid)
+    Log.w("After-getFriends-gUD",friends.toString())
+    var profilePic: Painter? = null
+    if (!userInfo.profilePicture.isBlank())fetchPainter(userInfo.profilePicture,{painter -> profilePic = painter})
 
-        }
-
-    }
-
-    val completedChallenges = getChallenges(userInfo!!.completedChallengeRef)
-    val friends = getFriends(userInfo.uid)
+    var curChal = Challenge()
+    getTodayChallenge({c -> curChal = c})
 
     updateUser(UserState(
         uid = userInfo.uid,
@@ -45,16 +71,24 @@ fun getUserData(uid: String, updateUser: (UserState) -> Unit){
         streakCount = userInfo.streakCount,
         completedCount = userInfo.completedCount,
         friendsCount = friends.size,
-        profilePicture = null, //TODO: get image after figure out image storage userInfo.profilePicture,
+        profilePicture = profilePic,
         completedChallenges = completedChallenges,
-        currentChallenges = getTodayChallenge(),
-        friendsUID = friends
+        currentChallenges = curChal,
+        friendsUID = friends,
+        profilePicUrl = userInfo.profilePicture,
+        completedChallengesUri = userInfo.completedChallengeRef
     )
     )
+
 }
 
-fun createDbUser(uid:String, updateUser: (UserState) -> Unit) {
+
+
+
+suspend fun createDbUser(uid:String, updateUser: (UserState) -> Unit) {
     val db = Firebase.firestore
+    var curChal = Challenge()
+    getTodayChallenge({c -> curChal = c})
     val userState = UserState(
         uid = uid,
         userName = "Anonymous User",
@@ -64,28 +98,61 @@ fun createDbUser(uid:String, updateUser: (UserState) -> Unit) {
         friendsCount = 0,
         profilePicture = null,
         completedChallenges = emptyList(),
-        currentChallenges = getTodayChallenge(),
-        friendsUID = emptyList()
+        currentChallenges = curChal,
+        friendsUID = emptyList(),
+        profilePicUrl = "",
+        completedChallengesUri = emptyList()
     )
-    db.collection("users").document(uid).set(userState)
+    val fsUserState = firestoreUser(
+        uid = userState.uid,
+        userName = userState.userName,
+        userHandle = userState.userHandle,
+        streakCount = userState.streakCount,
+        completedCount = userState.completedCount,
+        profilePicture = userState.profilePicUrl,
+        completedChallengeRef = userState.completedChallengesUri
+    )
+    db.collection("users").document(uid).set(fsUserState)
     updateUser(userState)
 }
 
 fun updateUserData(userState:UserState){
-    TODO()
-}
-
-fun getChallenges(challenges: List<String>):List<Challenge>{
-    return emptyList()
-}
-
-fun getTodayChallenge(): Challenge{
-    return Challenge(
-        id = 0,
-        title =" Do 10 jumping jacks",
-        date = Date(11/12/2025),
-        imageRes = ""
+    val db = Firebase.firestore
+    val fsUser = firestoreUser(
+        uid = userState.uid,
+        userName = userState.userName,
+        userHandle = userState.userHandle,
+        streakCount = userState.streakCount,
+        completedCount = userState.completedChallenges.size,
+        profilePicture = userState.profilePicUrl,
+        completedChallengeRef = userState.completedChallengesUri
     )
+    db.collection("users").document(userState.uid).set(fsUser)
+}
+
+fun getChallenges(challenges: List<String>): List<Challenge>{
+    val retChallenge = mutableListOf<Challenge>()
+    for (challenge in challenges){
+        getChallengesHelper(challenge,{c -> retChallenge.add(c)})
+    }
+    return retChallenge
+}
+private fun getChallengesHelper(challenge: String, callback: (Challenge) -> Unit){
+    val db = Firebase.firestore
+    db.document(challenge).get().addOnCompleteListener { task ->
+        if(task.isSuccessful){
+            val fbc = task.result.toObject<Challenge>()
+            callback(fbc!!)
+        }
+    }
+}
+
+suspend fun getTodayChallenge(callback: (Challenge) -> Unit){
+    val format = SimpleDateFormat("MM/dd/YYYY")
+    val db = Firebase.firestore
+    val task = db.collection("Challenge").document("20251115") // TODO: Implement Date when more challenges are added
+        .get().await()
+    callback(task.toObject<Challenge>()!!)
 }
 
 fun getFeedPosts(userState: UserState, setFeed: (List<Post>) -> Unit){

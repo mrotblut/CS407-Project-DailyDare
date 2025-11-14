@@ -3,10 +3,11 @@ package com.cs407.dailydare.data
 import java.util.Date
 
 data class Challenge(
-    val id: Int,
-    val title: String,
-    val date: Date,
-    val imageRes: String
+    val id: Int = 0,
+    val title: String = "",
+    val date: Date = Date(),
+    val imageRes: Int = 2130968626,
+    val description: String = ""
 )
 
 data class Post(

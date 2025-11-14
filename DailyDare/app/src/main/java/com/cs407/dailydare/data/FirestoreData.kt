@@ -1,5 +1,6 @@
 package com.cs407.dailydare.data
 
+import com.google.firebase.firestore.DocumentReference
 import java.util.Date
 
 data class firestoreUser(
@@ -9,7 +10,7 @@ data class firestoreUser(
     val streakCount: Int = 0,
     val completedCount: Int = 0,
     val profilePicture: String = "",
-    val completedChallengeRef: List<String> = emptyList<String>()
+    val completedChallengeRef: List<String> = emptyList()
 )
 
 data class firestoreFriends(
@@ -30,12 +31,6 @@ data class firestoreUserChallenges(
     val title: String,
     val description: String,
     val postPicture: String?
-)
-
-data class firestoreChallenge(
-    val id: String,
-    val imageRes: String,
-    val title: String
 )
 
 data class firestorePost(
