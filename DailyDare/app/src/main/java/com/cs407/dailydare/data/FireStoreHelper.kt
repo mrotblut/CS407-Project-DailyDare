@@ -159,7 +159,11 @@ fun getFeedPosts(userState: UserState, setFeed: (List<Post>) -> Unit){
     if(userState.friendsCount==0){setFeed(emptyList()); return}
     val friends = userState.friendsUID
     val db = Firebase.firestore
-    val docRef = db.collection("posts").whereIn("uid",friends)
+    val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+    val today = LocalDate.now()
+    val yesterday = today.minusDays(1)
+    val dates = listOf(today.format(formatter),yesterday.format(formatter))
+    val docRef = db.collection("posts").whereIn("uid",friends).whereIn("date",dates)
     docRef.get().addOnSuccessListener { documentSnapshot  ->
         val posts = mutableListOf<Post>()
         for (i in documentSnapshot){
@@ -203,10 +207,41 @@ fun changeLikePost(userState: UserState, postId:String){
     }
 }
 
-fun postPost(userState:UserState, challenge: Challenge, imageLink: String, caption:String){
+fun postPost(userState:UserState, challenge: Challenge, imageLink: String, caption:String, updateUserState: (UserState) -> Unit){
+    // Create Post in DB
     val db = Firebase.firestore
     val postId = userState.uid+"-"+LocalDate.now()
     val docRef = db.collection("posts").document(postId)
     docRef.set(firestorePost(userState.uid,challenge.title,caption,challenge.date,imageLink,emptyList(),postId))
+
+    // Add Completed Challenge to US
+    val challengeId = "Challenge/" + challenge.id.toString()
+    val newUserState = UserState(
+        uid = userState.uid,
+        userName = userState.userName,
+        userHandle = userState.userHandle,
+        streakCount = userState.streakCount,
+        completedCount = userState.completedCount+1,
+        friendsCount = userState.friendsCount,
+        profilePicture = userState.profilePicture,
+        completedChallenges = userState.completedChallenges + challenge,
+        currentChallenges = userState.currentChallenges,
+        friendsUID = userState.friendsUID,
+        profilePicUrl = userState.profilePicUrl,
+        completedChallengesUri = userState.completedChallengesUri + challengeId
+    )
+    updateUserData(newUserState)
+    updateUserState(newUserState)
 }
 
+fun friendRequest(userState: UserState, friendUID: String){
+    TODO()
+}
+
+fun acceptFriendRequest(userState: UserState, newFriendUID: String){
+    TODO()
+    updateUserData(TODO())
+}
+fun updateProfile(userState: UserState, userName: String, userHandle: String, imageUrl: String){
+    TODO()
+}

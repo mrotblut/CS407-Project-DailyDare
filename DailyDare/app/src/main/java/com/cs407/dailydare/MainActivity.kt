@@ -137,7 +137,7 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                     // - postPicture = imageUrl (the ImgBB URL string)
                     // - other challenge fields
                     // Then save to Firestore
-                    postPost(userState,userState.currentChallenges,imageUrl,caption)
+                    postPost(userState,userState.currentChallenges,imageUrl,caption, {userState -> userViewModel.setUser(userState)})
                     println("Caption: $caption, Image URL: $imageUrl")
                 }
             )
