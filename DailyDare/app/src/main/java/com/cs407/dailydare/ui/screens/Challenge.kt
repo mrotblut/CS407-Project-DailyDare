@@ -20,7 +20,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.dailydare.R
+import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.ui.components.BottomNavigationBar
+import java.text.SimpleDateFormat
 
 @Composable
 fun ChallengeScreen(
@@ -30,12 +32,11 @@ fun ChallengeScreen(
     onNavigateToNotifications: () -> Unit,
     onNavigationToProfile: () -> Unit,
     onNavigateToPost: () -> Unit = {},
-    // TODO: These will come from ViewModel/Database
-    challengeTitle: String = "Do 10 jumping jacks",
-    challengeDescription: String = "Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?",
-    challengeImageRes: Int = R.drawable.wireframe,
-    timePosted: String = "1h ago"
+    challenge: Challenge,
 ) {
+    val challengeTitle = challenge.title
+    val challengeDescription = challenge.description
+    val challengeImageRes = challenge.imageRes
     val backgroundColor = colorResource(id = R.color.app_background)
     val buttonColor = colorResource(id = R.color.button_primary)
 
@@ -129,14 +130,6 @@ fun ChallengeScreen(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
-                    // Time posted
-                    Text(
-                        text = timePosted,
-                        fontSize = 12.sp,
-                        color = Color.LightGray,
-                        modifier = Modifier.padding(bottom = 24.dp)
-                    )
-
                     // Submit Proof Button
                     Button(
                         onClick = onNavigateToPost,
@@ -169,12 +162,15 @@ fun ChallengeScreen(
 @Preview(showBackground = true)
 @Composable
 fun ChallengeScreenPreview() {
+    val format = SimpleDateFormat("yyyy-MM-dd")
     ChallengeScreen(
         onNavigateToHome = {},
         onNavigateToChallenge = {},
         onNavigateToFriends = {},
         onNavigateToNotifications = {},
         onNavigationToProfile = {},
-        onNavigateToPost = {}
+        onNavigateToPost = {},
+        challenge = Challenge(4, "Try a new hobby for 1 hour",
+            format.parse("2025-11-15")!!, R.drawable.wireframe,"Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
     )
 }

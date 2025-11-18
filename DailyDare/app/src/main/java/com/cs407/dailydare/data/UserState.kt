@@ -13,6 +13,8 @@ data class UserState(
     val friendsCount: Int = 0,
     val profilePicture: Painter? = null,
     val completedChallenges: List<Challenge> = emptyList(),
-    val currentChallenges: Challenge = getTodayChallenge(),
-    val friendsUID: List<String> = emptyList()
+    val currentChallenges: Challenge = Challenge(),
+    val friendsUID: List<String> = emptyList(),
+    val profilePicUrl: String = "",
+    val completedChallengesUri: List<String> = emptyList()
 )

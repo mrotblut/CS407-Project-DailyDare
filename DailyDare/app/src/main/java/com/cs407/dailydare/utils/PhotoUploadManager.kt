@@ -1,8 +1,12 @@
 package com.cs407.dailydare.utils
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
 import org.json.JSONObject
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -52,4 +56,44 @@ object PhotoUploadManager {
             }
         }
     }
+
+    fun fetchPainter(urlString: String, callback: (Painter?) -> Unit) {
+        thread {
+            try {
+                val url = URL(urlString)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.doInput = true
+
+                val inputStream = connection.inputStream
+                val bytes = inputStream.readBytes()
+                inputStream.close()
+
+                if (bytes.isEmpty()) {
+                    callback(null)
+                    return@thread
+                }
+
+                // Decode to Bitmap
+                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                if (bitmap == null) {
+                    callback(null)
+                    return@thread
+                }
+
+                // Convert to ImageBitmap
+                val imageBitmap = bitmap.asImageBitmap()
+
+                // Wrap in Painter
+                val painter = BitmapPainter(imageBitmap)
+
+                callback(painter)
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                callback(null)
+            }
+        }
+    }
+
 }

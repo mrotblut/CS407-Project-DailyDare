@@ -1,5 +1,6 @@
 package com.cs407.dailydare.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -29,13 +30,17 @@ import com.cs407.dailydare.R
 import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.data.UserState
 import com.cs407.dailydare.ui.components.BottomNavigationBar
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.util.Date
+import java.util.Locale
 
 
 @Composable
 fun ProfileScreen(
-    // TODO: Placeholder data to be passed in from a ViewModel and onClick actions
+    // : Placeholder data to be passed in from a ViewModel and onClick actions
     userState: UserState,
-    // TODO: Navigation actions
+    // : Navigation actions
     onNavigateToHome: () -> Unit,
     onNavigateToChallenge: () -> Unit,
     onNavigateToFriends: () -> Unit,
@@ -239,7 +244,9 @@ fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun ChallengeCard(imageRes: Int, title: String, date: String) {
+fun ChallengeCard(imageRes: Int, title: String, date: Date) {
+    val pattern = "EEE MMM dd yyyy"
+    val simpleDateFormat = SimpleDateFormat(pattern, Locale.ENGLISH)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -262,7 +269,7 @@ fun ChallengeCard(imageRes: Int, title: String, date: String) {
             Column {
                 Text(text = title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = date, fontSize = 14.sp, color = Color.Gray)
+                Text(text = simpleDateFormat.format(date), fontSize = 14.sp, color = Color.Gray)
             }
         }
     }
@@ -272,13 +279,15 @@ fun ChallengeCard(imageRes: Int, title: String, date: String) {
 @Preview(showBackground = true, backgroundColor = 0xFFF8F8FF)
 @Composable
 fun ProfileScreenPreview() {
+    val format = SimpleDateFormat("yyyy-MM-dd")
     val sampleCompletedChallenges = listOf(
-        Challenge(1, "Do 10 jumping jacks in a funny place", "Completed: Oct 26, 2023", R.drawable.wireframe),
-        Challenge(2, "Recreate a famous movie scene", "Completed: Oct 25, 2023", R.drawable.wireframe),
-        Challenge(3, "Build a pillow fort", "Completed: Oct 24, 2023", R.drawable.wireframe)
+        Challenge(1, "Do 10 jumping jacks in a funny place", format.parse("2025-10-31")!!, R.drawable.wireframe,""),
+        Challenge(2, "Recreate a famous movie scene", format.parse("2025-10-30")!!, R.drawable.wireframe,""),
+        Challenge(3, "Build a pillow fort", format.parse("2025-10-29")!!, R.drawable.wireframe,"")
     )
 
-    val sampleCurrentChallenge = Challenge(4, "Try a new hobby for 1 hour", "Due: Nov 15, 2023", R.drawable.wireframe)
+    val sampleCurrentChallenge = Challenge(4, "Try a new hobby for 1 hour",
+        format.parse("2025-11-15")!!, R.drawable.wireframe,"Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
 
 
     val sampleUser = UserState(
