@@ -91,7 +91,8 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                 onNavigateToFriends = { navController.navigate("Friends") },
                 onNavigateToChallenge = { navController.navigate("Challenge") },
                 onNavigationToProfile = { navController.navigate("Profile") },
-                onNavigateToNotifications = { navController.navigate("Notifications") }
+                onNavigateToNotifications = { navController.navigate("Notifications") },
+                userState = userState
             )
         }
         composable("Challenge") {
