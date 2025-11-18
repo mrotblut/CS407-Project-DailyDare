@@ -21,38 +21,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
+import com.cs407.dailydare.data.Challenge
+import com.cs407.dailydare.data.Post
 import com.cs407.dailydare.ui.components.BottomNavigationBar
 import com.cs407.dailydare.data.UserState
 import com.cs407.dailydare.data.getFeedPosts
 import com.cs407.dailydare.data.firestoreUserChallenges
+import com.cs407.dailydare.data.getUserData
+import com.cs407.dailydare.utils.PhotoUploadManager.fetchPainter
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-
-data class FeedPost(
-    val postId: String = "",
-    val userId: String = "",
-    val userName: String = "",
-    val userHandle: String = "",
-    val profilePicture: String = "",
-    val challengeTitle: String = "",
-    val challengeDescription: String = "",
-    val postImageUrl: String = "",
-    val caption: String = "",
-    val likes: Int = 0,
-    val comments: Int = 0,
-    val timestamp: Long = 0L,
-    var isLiked: Boolean = false
-)
+import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +55,7 @@ fun FeedScreen(
     onNavigationToProfile: () -> Unit,
     userState: UserState = UserState()
 ) {
-    var posts by remember { mutableStateOf<List<FeedPost>>(emptyList()) }
+    var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isRefreshing by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -72,13 +63,13 @@ fun FeedScreen(
     fun refreshPosts() {
         coroutineScope.launch {
             isRefreshing = true
-            posts = loadFeedPosts(userState)
+            getFeedPosts(userState, {newList -> posts = newList})
             isRefreshing = false
         }
     }
 
     LaunchedEffect(Unit) {
-        posts = loadFeedPosts(userState)
+        getFeedPosts(userState, {newList -> posts = newList})
         isLoading = false
     }
 
@@ -148,7 +139,7 @@ fun FeedScreen(
                             }
                         } else {
                             items(posts) { post ->
-                                FeedPostCard(
+                                PostCard(
                                     post = post,
                                     onLikeClick = { postId ->
                                         posts = posts.map {
@@ -159,9 +150,7 @@ fun FeedScreen(
                                                 )
                                             } else it
                                         }
-                                    },
-                                    onCommentClick = { },
-                                    onShareClick = { }
+                                    }
                                 )
                             }
                         }
@@ -225,12 +214,20 @@ fun CurrentChallengeCard(
 }
 
 @Composable
-fun FeedPostCard(
-    post: FeedPost,
-    onLikeClick: (String) -> Unit,
-    onCommentClick: (String) -> Unit,
-    onShareClick: (String) -> Unit
+fun PostCard(
+    post: Post,
+    onLikeClick: (String) -> Unit
 ) {
+    val defaultUser = painterResource(id = R.drawable.default_user)
+    var userImage: Painter = defaultUser
+    if (post.profilePicture.isNotEmpty()) {
+        fetchPainter(post.profilePicture, {img -> userImage = img?:defaultUser})
+    }
+
+    var postImg: Painter? = null
+    if (post.profilePicture.isNotEmpty()) {
+        fetchPainter(post.contentUri, {img -> postImg = img})
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -249,11 +246,7 @@ fun FeedPostCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = if (post.profilePicture.isNotEmpty()) {
-                        rememberAsyncImagePainter(post.profilePicture)
-                    } else {
-                        painterResource(id = R.drawable.default_user)
-                    },
+                    painter = userImage,
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .size(48.dp)
@@ -292,7 +285,7 @@ fun FeedPostCard(
                     .padding(8.dp)
             ) {
                 Text(
-                    text = "Challenge: ${post.challengeTitle}",
+                    text = "Challenge: ${post.title}",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colorResource(id = R.color.button_primary)
@@ -301,9 +294,9 @@ fun FeedPostCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (post.postImageUrl.isNotEmpty()) {
+            if (postImg != null) {
                 Image(
-                    painter = rememberAsyncImagePainter(post.postImageUrl),
+                    painter = postImg!!,
                     contentDescription = "Post image",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -354,83 +347,36 @@ fun FeedPostCard(
                         color = Color.Gray
                     )
                 }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    IconButton(
-                        onClick = { onCommentClick(post.postId) }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Comment,
-                            contentDescription = "Comment",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    Text(
-                        text = post.comments.toString(),
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    IconButton(
-                        onClick = { onShareClick(post.postId) }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Share,
-                            contentDescription = "Share",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
             }
         }
     }
 }
 
-suspend fun loadFeedPosts(userState: UserState): List<FeedPost> {
-    return try {
-        val db = Firebase.firestore
-        val posts = mutableListOf<FeedPost>()
 
-        val firestorePosts = getFeedPosts(userState.friendsUID, userState.uid)
 
-        for (postData in firestorePosts) {
-            val userDoc = db.collection("users").document(postData.UserUID).get().await()
-            val userName = userDoc.getString("userName") ?: "Unknown User"
-            val userHandle = userDoc.getString("userHandle") ?: "unknown"
-            val profilePicture = userDoc.getString("profilePicture") ?: ""
 
-            posts.add(
-                FeedPost(
-                    postId = "",
-                    userId = postData.UserUID,
-                    userName = userName,
-                    userHandle = userHandle,
-                    profilePicture = profilePicture,
-                    challengeTitle = postData.title,
-                    challengeDescription = postData.description,
-                    postImageUrl = postData.postPicture ?: "",
-                    caption = postData.description,
-                    likes = (0..50).random(),
-                    comments = (0..20).random(),
-                    timestamp = postData.date.time,
-                    isLiked = false
-                )
-            )
-        }
+@Preview
+@Composable
+fun feedPreview(){
+    val format = SimpleDateFormat("yyyy-MM-dd")
+    val sampleCompletedChallenges = listOf(
+        Challenge(1, "Do 10 jumping jacks in a funny place", format.parse("2025-10-31")!!, R.drawable.wireframe,""),
+        Challenge(2, "Recreate a famous movie scene", format.parse("2025-10-30")!!, R.drawable.wireframe,""),
+        Challenge(3, "Build a pillow fort", format.parse("2025-10-29")!!, R.drawable.wireframe,"")
+    )
 
-        posts.sortedByDescending { it.timestamp }
-    } catch (e: Exception) {
-        emptyList()
-    }
+    val sampleCurrentChallenge = Challenge(4, "Try a new hobby for 1 hour",
+        format.parse("2025-11-15")!!, R.drawable.wireframe,"Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
+    val user = UserState(
+        uid = "SAMPLEUSER",
+        userName = "IShowSpeed",
+        userHandle = "@IShowSpeed",
+        streakCount = 7,
+        completedCount = sampleCompletedChallenges.size,
+        friendsCount = 12,
+        completedChallenges = sampleCompletedChallenges,
+        currentChallenges = sampleCurrentChallenge,
+        profilePicture = painterResource(id = R.drawable.default_user)
+    )
+    FeedScreen({},{},{},{},{},user)
 }
