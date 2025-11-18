@@ -29,6 +29,8 @@ import com.cs407.dailydare.ui.screens.ProfileScreen
 import com.cs407.dailydare.ui.screens.SignInScreen
 import com.cs407.dailydare.ui.screens.SignUpScreen
 import com.cs407.dailydare.ui.theme.DailyDareTheme
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,7 +117,17 @@ fun AppNavigation() {
                 onNavigateToChallenge = { navController.navigate("Challenge") },
                 onNavigateToNotifications = { navController.navigate("Notifications") },
                 onNavigateToProfile = { navController.navigate("Profile") },
-                onEditProfile = {}
+                onEditProfile = {}, // TODO, edit profile
+                onLogout = {
+                    Firebase.auth.signOut()
+                    navController.navigate("SignIn") {
+                        // reset nav graph
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
         composable("SignIn") {

@@ -17,6 +17,8 @@
     <!-- App Specific Colors -->
     <color name="app_background">#FFF8F8FF</color>
     <color name="button_primary">#FF5A31F4</color>
+    <color name="top_app_bar">#FF5A31F4</color>
+    <color name="top_app_bar_gradient_end">#FF3C1BAA</color>
     <color name="button_secondary_background">#FFEDE8FF</color>
     <color name="textfield_background">#FFF2F2FA</color>
 </resources>

@@ -17,10 +17,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.dailydare.R
 import com.cs407.dailydare.ui.components.BottomNavigationBar
+import com.cs407.dailydare.ui.components.TopNavigationBar
 
 @Composable
 fun FeedScreen(onNavigateToHome: () -> Unit, onNavigateToChallenge:() -> Unit, onNavigateToFriends:() -> Unit, onNavigateToNotifications:() -> Unit, onNavigationToProfile:() -> Unit){
     Scaffold(
+        topBar = {
+            TopNavigationBar(title = "Home")
+        },
         bottomBar = {
             BottomNavigationBar(
                 onNavigateToHome = onNavigateToHome,
@@ -43,13 +47,6 @@ fun FeedScreen(onNavigateToHome: () -> Unit, onNavigateToChallenge:() -> Unit, o
             verticalArrangement = Arrangement.Center
         ) {
             // TODO: Put code in the scaffold
-            Text(
-                text = "FEED",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
         }
     }
 }

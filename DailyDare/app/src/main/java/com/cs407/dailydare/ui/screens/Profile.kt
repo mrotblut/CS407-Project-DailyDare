@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,14 +42,43 @@ fun ProfileScreen(
     onNavigateToFriends: () -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigateToProfile:() -> Unit,
-    onEditProfile: () -> Unit
+    onEditProfile: () -> Unit,
+    onLogout: () -> Unit
 ) {
     var selectedTab by remember { mutableStateOf("Completed") }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     val challengesToShow = if (selectedTab == "Completed") {
         userState.completedChallenges
     } else {
         listOf(userState.currentChallenges)
     }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Log Out") },
+            text = { Text("Are you sure you want to log out?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showLogoutDialog = false }
+                ) {
+                    Text("No")
+                }
+            }
+        )
+    }
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -62,22 +92,20 @@ fun ProfileScreen(
         },
         containerColor = colorResource(id = R.color.app_background)
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(colorResource(id = R.color.app_background))
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(colorResource(id = R.color.app_background))
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Spacer to provide room for the logout button at the top
+                item { Spacer(modifier = Modifier.height(60.dp)) }
+
                 // Profile Header
                 item {
                     ProfileHeader(
@@ -110,12 +138,14 @@ fun ProfileScreen(
                             color = Color.Black
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-
-                        // Complete and current Buttons
                         Row {
-                            TabButton("Completed", selectedTab == "Completed") { selectedTab = "Completed" }
+                            TabButton("Completed", selectedTab == "Completed") {
+                                selectedTab = "Completed"
+                            }
                             Spacer(modifier = Modifier.width(8.dp))
-                            TabButton("Current", selectedTab == "Current") { selectedTab = "Current" }
+                            TabButton("Current", selectedTab == "Current") {
+                                selectedTab = "Current"
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -125,8 +155,7 @@ fun ProfileScreen(
                     item {
                         Text("No challenges to display", color = Color.Gray)
                     }
-                }
-                else {
+                } else {
                     items(challengesToShow) { challenge ->
                         ChallengeCard(
                             imageRes = challenge.imageRes,
@@ -136,6 +165,22 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
+            }
+            // Logout button
+            FloatingActionButton(
+                onClick = { showLogoutDialog = true },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(20.dp)
+                    .size(52.dp),
+                shape = CircleShape,
+                containerColor = Color.Red,
+                contentColor = Color.White
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = "Log Out"
+                )
             }
         }
     }
@@ -299,6 +344,7 @@ fun ProfileScreenPreview() {
         onNavigateToFriends = {},
         onNavigateToNotifications = {},
         onNavigateToProfile = {},
-        onEditProfile = {}
+        onEditProfile = {},
+        onLogout = {}
     )
 }
