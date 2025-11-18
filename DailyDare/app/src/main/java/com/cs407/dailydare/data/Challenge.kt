@@ -18,5 +18,8 @@ data class Post(
     val date: Date,
     val contentUri: String,
     val likes: Int,
-    var isLiked: Boolean
+    var isLiked: Boolean,
+    val userName: String,
+    val userHandle: String,
+    val profilePicture: String,
     )
