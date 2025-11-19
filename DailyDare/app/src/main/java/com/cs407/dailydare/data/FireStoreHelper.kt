@@ -28,25 +28,25 @@ suspend fun getFriends(uid: String) : List<String> {
     val querySnapshot = db.collection("friends")
         .whereArrayContains("UID", uid).get().await()
 
-            val friends = mutableListOf<String>()
+    val friends = mutableListOf<String>()
 
-            for (doc in querySnapshot) {
-                // Get the array field "UID" as a list
-                val friendList = doc.get("UID") as? List<String> ?: emptyList()
-                Log.w("getFriends",friendList.toString())
+    for (doc in querySnapshot) {
+        // Get the array field "UID" as a list
+        val friendList = doc.get("UID") as? List<String> ?: emptyList()
+        Log.w("getFriends",friendList.toString())
 
-                if (friendList.size == 2) {
-                    val friend = if (friendList[0] == uid) {
-                        friendList[1]
-                    } else {
-                        friendList[0]
-                    }
-                    friends.add(friend)
-                }
+        if (friendList.size == 2) {
+            val friend = if (friendList[0] == uid) {
+                friendList[1]
+            } else {
+                friendList[0]
             }
-            Log.w("getFriends",friends.toString())
-            return(friends)
+            friends.add(friend)
         }
+    }
+    Log.w("getFriends",friends.toString())
+    return(friends)
+}
 
 
 
@@ -158,15 +158,18 @@ suspend fun getTodayChallenge(callback: (Challenge) -> Unit){
 fun getFeedPosts(userState: UserState, setFeed: (List<Post>) -> Unit){
     if(userState.friendsCount==0){setFeed(emptyList()); return}
     val friends = userState.friendsUID
+    Log.w("gFP",friends.toString())
     val db = Firebase.firestore
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     val today = LocalDate.now()
     val yesterday = today.minusDays(1)
-    val dates = listOf(today.format(formatter),yesterday.format(formatter))
-    val docRef = db.collection("posts").whereIn("uid",friends).whereIn("date",dates)
+    val dates = listOf(today,yesterday)
+    val docRef = db.collection("posts").whereIn("uid",friends)
     docRef.get().addOnSuccessListener { documentSnapshot  ->
         val posts = mutableListOf<Post>()
+        Log.w("gFP",documentSnapshot.size().toString())
         for (i in documentSnapshot){
+
             val fsPost = i.toObject<firestorePost>()
             val post = Post(
                 uid = fsPost.uid,
@@ -177,15 +180,19 @@ fun getFeedPosts(userState: UserState, setFeed: (List<Post>) -> Unit){
                 contentUri = fsPost.contentUri,
                 likes = fsPost.likes.size,
                 isLiked = userState.uid in fsPost.likes,
-                userName = "", // TODO
-                userHandle = "", // TODO
-                profilePicture = "" //TODO
+                userName = "userName", // TODO
+                userHandle = "userHandle", // TODO
+                profilePicture = "https://i.ibb.co/7xF5rPr7/jump.jpg" //TODO
             )
             posts.add(post)
         }
+        Log.w("gFP",posts.toString())
         setFeed(posts)
         return@addOnSuccessListener
     }
+        .addOnFailureListener { e->
+            Log.w("gFP",e.toString())
+        }
 }
 
 fun changeLikePost(userState: UserState, postId:String){
@@ -202,7 +209,7 @@ fun changeLikePost(userState: UserState, postId:String){
             }else{
                 likes.add(uid)
             }
-             post = firestorePost(post.uid,post.title,post.caption,post.date,post.contentUri,likes,post.postId)
+            post = firestorePost(post.uid,post.title,post.caption,post.date,post.contentUri,likes,post.postId)
             docRef.set(post)
 
         }

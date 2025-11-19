@@ -22,23 +22,12 @@ data class firestoreFriendRequest(
     val to: String
 )
 
-data class firestoreUserChallenges(
-    val ChallengeID: Int,
-    val UserUID: String,
-    val completed: Boolean,
-    val date: Date,
-    val imageRes: String,
-    val title: String,
-    val description: String,
-    val postPicture: String?
-)
-
 data class firestorePost(
-    val uid: String,
-    val title: String,
-    val caption: String,
-    val date: Date,
-    val contentUri: String,
-    val likes: List<String>,
-    val postId: String
+    val uid: String = "",
+    val title: String = "",
+    val caption: String = "",
+    val date: Date = Date(),
+    val contentUri: String = "",
+    val likes: List<String> = emptyList(),
+    val postId: String = ""
 )
