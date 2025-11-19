@@ -176,7 +176,10 @@ fun getFeedPosts(userState: UserState, setFeed: (List<Post>) -> Unit){
                 date = fsPost.date,
                 contentUri = fsPost.contentUri,
                 likes = fsPost.likes.size,
-                isLiked = userState.uid in fsPost.likes
+                isLiked = userState.uid in fsPost.likes,
+                userName = "", // TODO
+                userHandle = "", // TODO
+                profilePicture = "" //TODO
             )
             posts.add(post)
         }
