@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.cs407.dailydare.R
 import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.ui.components.BottomNavigationBar
+import com.cs407.dailydare.ui.components.TopNavigationBar
 import java.text.SimpleDateFormat
 
 @Composable
@@ -41,6 +42,9 @@ fun ChallengeScreen(
     val buttonColor = colorResource(id = R.color.button_primary)
 
     Scaffold(
+        topBar = {
+            TopNavigationBar(title = "Daily Dare")
+        },
         bottomBar = {
             BottomNavigationBar(
                 onNavigateToHome = onNavigateToHome,
@@ -62,19 +66,10 @@ fun ChallengeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Header
-            Text(
-                text = "Daily Dare",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
             Text(
                 text = "Today's Challenge",
-                fontSize = 16.sp,
-                color = Color.Gray,
+                fontSize = 24.sp,
+                color = Color.Black,
                 modifier = Modifier.padding(bottom = 32.dp)
             )
 
@@ -100,14 +95,6 @@ fun ChallengeScreen(
                             .height(200.dp)
                             .padding(bottom = 16.dp),
                         contentScale = ContentScale.Crop
-                    )
-
-                    // "Today's Dare" label
-                    Text(
-                        text = "Today's Dare",
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(bottom = 8.dp)
                     )
 
                     // Challenge Title

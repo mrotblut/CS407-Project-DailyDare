@@ -36,6 +36,8 @@ import com.cs407.dailydare.ui.screens.ProfileScreen
 import com.cs407.dailydare.ui.screens.SignInScreen
 import com.cs407.dailydare.ui.screens.SignUpScreen
 import com.cs407.dailydare.ui.theme.DailyDareTheme
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import java.text.SimpleDateFormat
 
 class MainActivity : ComponentActivity() {
@@ -152,6 +154,16 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                     onNavigateToNotifications = { navController.navigate("Notifications") },
                     onNavigateToProfile = { navController.navigate("Profile") },
                     onEditProfile = {}
+                    onLogout = {
+                        Firebase.auth.signOut()
+                        navController.navigate("SignIn") {
+                            // reset nav graph
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
             composable("SignIn") {

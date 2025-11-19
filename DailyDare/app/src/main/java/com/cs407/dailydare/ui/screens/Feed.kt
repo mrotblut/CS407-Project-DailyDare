@@ -34,6 +34,7 @@ import com.cs407.dailydare.R
 import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.data.Post
 import com.cs407.dailydare.ui.components.BottomNavigationBar
+import com.cs407.dailydare.ui.components.TopNavigationBar
 import com.cs407.dailydare.data.UserState
 import com.cs407.dailydare.data.getFeedPosts
 import com.cs407.dailydare.data.firestoreUserChallenges
@@ -74,6 +75,9 @@ fun FeedScreen(
     }
 
     Scaffold(
+        topBar = {
+            TopNavigationBar(title = "Home")
+        },
         bottomBar = {
             BottomNavigationBar(
                 onNavigateToHome = onNavigateToHome,
