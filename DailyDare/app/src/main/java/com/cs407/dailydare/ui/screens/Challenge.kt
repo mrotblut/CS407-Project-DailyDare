@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
 import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.ui.components.BottomNavigationBar
@@ -37,7 +38,7 @@ fun ChallengeScreen(
 ) {
     val challengeTitle = challenge.title
     val challengeDescription = challenge.description
-    val challengeImageRes = challenge.imageRes
+    val challengeImageRes = challenge.imageLink
     val backgroundColor = colorResource(id = R.color.app_background)
     val buttonColor = colorResource(id = R.color.button_primary)
 
@@ -88,7 +89,7 @@ fun ChallengeScreen(
                 ) {
                     // Challenge Image
                     Image(
-                        painter = painterResource(id = challengeImageRes),
+                        painter = rememberAsyncImagePainter(model = challengeImageRes),
                         contentDescription = "Challenge Image",
                         modifier = Modifier
                             .fillMaxWidth()
@@ -158,6 +159,6 @@ fun ChallengeScreenPreview() {
         onNavigationToProfile = {},
         onNavigateToPost = {},
         challenge = Challenge(4, "Try a new hobby for 1 hour",
-            format.parse("2025-11-15")!!, R.drawable.wireframe,"Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
+            format.parse("2025-11-15")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg","Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
     )
 }

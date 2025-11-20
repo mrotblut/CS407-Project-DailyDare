@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
 import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.data.UserState
@@ -116,7 +117,7 @@ fun ProfileScreen(
                     ProfileHeader(
                         userName = userState.userName,
                         userHandle = userState.userHandle,
-                        profilePicture = userState.profilePicture,
+                        profilePicture = if(userState.profilePicUrl.isEmpty()){painterResource(R.drawable.default_user)}else{rememberAsyncImagePainter(model = userState.profilePicUrl)},
                         onEditClick = onEditProfile,
                         streakCount = userState.streakCount
                     )
@@ -163,7 +164,7 @@ fun ProfileScreen(
                 } else {
                     items(challengesToShow) { challenge ->
                         ChallengeCard(
-                            imageRes = challenge.imageRes,
+                            imageRes = challenge.imageLink,
                             title = challenge.title,
                             date = challenge.date
                         )
@@ -196,14 +197,14 @@ fun ProfileScreen(
 fun ProfileHeader(
     userName: String,
     userHandle: String,
-    profilePicture: Painter?,
+    profilePicture: Painter,
     streakCount: Int,
     onEditClick: () -> Unit
 ) {
     val buttonColor = colorResource(id = R.color.button_primary)
     Box(contentAlignment = Alignment.TopCenter) {
         Image(
-            painter = profilePicture ?: painterResource(id = R.drawable.default_user),
+            painter = profilePicture,
             contentDescription = "Profile Picture",
             modifier = Modifier
                 .size(120.dp)
@@ -289,7 +290,7 @@ fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun ChallengeCard(imageRes: Int, title: String, date: Date) {
+fun ChallengeCard(imageRes: String, title: String, date: Date) {
     val pattern = "EEE MMM dd yyyy"
     val simpleDateFormat = SimpleDateFormat(pattern, Locale.ENGLISH)
     Card(
@@ -303,7 +304,7 @@ fun ChallengeCard(imageRes: Int, title: String, date: Date) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = imageRes),
+                painter = rememberAsyncImagePainter(model = imageRes),
                 contentDescription = title,
                 modifier = Modifier
                     .size(60.dp)
@@ -326,13 +327,13 @@ fun ChallengeCard(imageRes: Int, title: String, date: Date) {
 fun ProfileScreenPreview() {
     val format = SimpleDateFormat("yyyy-MM-dd")
     val sampleCompletedChallenges = listOf(
-        Challenge(1, "Do 10 jumping jacks in a funny place", format.parse("2025-10-31")!!, R.drawable.wireframe,""),
-        Challenge(2, "Recreate a famous movie scene", format.parse("2025-10-30")!!, R.drawable.wireframe,""),
-        Challenge(3, "Build a pillow fort", format.parse("2025-10-29")!!, R.drawable.wireframe,"")
+        Challenge(1, "Do 10 jumping jacks in a funny place", format.parse("2025-10-31")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg",""),
+        Challenge(2, "Recreate a famous movie scene", format.parse("2025-10-30")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg",""),
+        Challenge(3, "Build a pillow fort", format.parse("2025-10-29")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg","")
     )
 
     val sampleCurrentChallenge = Challenge(4, "Try a new hobby for 1 hour",
-        format.parse("2025-11-15")!!, R.drawable.wireframe,"Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
+        format.parse("2025-11-15")!!, "https://centralca.cdn-anvilcms.net/media/images/2021/11/24/images/Ideal_Hobbies_pix_11-24-21.max-2400x1350.jpg","Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
 
 
     val sampleUser = UserState(
@@ -343,7 +344,6 @@ fun ProfileScreenPreview() {
         friendsCount = 12,
         completedChallenges = sampleCompletedChallenges,
         currentChallenges = sampleCurrentChallenge,
-        profilePicture = painterResource(id = R.drawable.default_user)
     )
 
     ProfileScreen(

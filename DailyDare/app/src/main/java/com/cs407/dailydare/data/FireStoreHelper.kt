@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.core.os.registerForAllProfilingResults
-import com.cs407.dailydare.utils.PhotoUploadManager.fetchPainter
+import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
@@ -58,8 +58,7 @@ suspend fun getUserData(uid: String, updateUser: (UserState) -> Unit){
     val completedChallenges = getChallenges(userInfo.completedChallengeRef)
     val friends = getFriends(uid)
     Log.w("After-getFriends-gUD",friends.toString())
-    var profilePic: Painter? = null
-    if (!userInfo.profilePicture.isBlank())fetchPainter(userInfo.profilePicture,{painter -> profilePic = painter})
+
 
     var curChal = Challenge()
     getTodayChallenge({c -> curChal = c})
@@ -71,7 +70,6 @@ suspend fun getUserData(uid: String, updateUser: (UserState) -> Unit){
         streakCount = userInfo.streakCount,
         completedCount = userInfo.completedCount,
         friendsCount = friends.size,
-        profilePicture = profilePic,
         completedChallenges = completedChallenges,
         currentChallenges = curChal,
         friendsUID = friends,
@@ -96,11 +94,10 @@ suspend fun createDbUser(uid:String, updateUser: (UserState) -> Unit) {
         streakCount = 0,
         completedCount = 0,
         friendsCount = 0,
-        profilePicture = null,
         completedChallenges = emptyList(),
         currentChallenges = curChal,
         friendsUID = emptyList(),
-        profilePicUrl = "",
+        profilePicUrl = "https://i.ibb.co/Lh2BnV7T/default-user.png",
         completedChallengesUri = emptyList()
     )
     val fsUserState = firestoreUser(
@@ -157,7 +154,7 @@ suspend fun getTodayChallenge(callback: (Challenge) -> Unit){
 
 fun getFeedPosts(userState: UserState, setFeed: (List<Post>) -> Unit){
     if(userState.friendsCount==0){setFeed(emptyList()); return}
-    val friends = userState.friendsUID
+    val friends = userState.friendsUID + userState.uid
     Log.w("gFP",friends.toString())
     val db = Firebase.firestore
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
@@ -169,29 +166,28 @@ fun getFeedPosts(userState: UserState, setFeed: (List<Post>) -> Unit){
         val posts = mutableListOf<Post>()
         Log.w("gFP",documentSnapshot.size().toString())
         for (i in documentSnapshot){
-
             val fsPost = i.toObject<firestorePost>()
-            val post = Post(
-                uid = fsPost.uid,
-                postId = i.id,
-                title = fsPost.title,
-                caption = fsPost.caption,
-                date = fsPost.date,
-                contentUri = fsPost.contentUri,
-                likes = fsPost.likes.size,
-                isLiked = userState.uid in fsPost.likes,
-                userName = "userName", // TODO
-                userHandle = "userHandle", // TODO
-                profilePicture = "https://i.ibb.co/7xF5rPr7/jump.jpg" //TODO
-            )
-            posts.add(post)
-        }
+                val post = Post(
+                    uid = fsPost.uid,
+                    postId = i.id,
+                    title = fsPost.title,
+                    caption = fsPost.caption,
+                    date = fsPost.date,
+                    contentUri = fsPost.contentUri,
+                    likes = fsPost.likes.size,
+                    isLiked = userState.uid in fsPost.likes,
+                    userName = fsPost.userName,
+                    userHandle = fsPost.userHandle,
+                    profilePicture = fsPost.userProfile
+                )
+                posts.add(post)
+            }
         Log.w("gFP",posts.toString())
         setFeed(posts)
         return@addOnSuccessListener
     }
         .addOnFailureListener { e->
-            Log.w("gFP",e.toString())
+            Log.w("gFP-error",e.toString())
         }
 }
 
@@ -222,7 +218,20 @@ fun postPost(userState:UserState, challenge: Challenge, imageLink: String, capti
     val db = Firebase.firestore
     val postId = userState.uid+"-"+LocalDate.now()
     val docRef = db.collection("posts").document(postId)
-    docRef.set(firestorePost(userState.uid,challenge.title,caption,challenge.date,imageLink,emptyList(),postId))
+    docRef.set(
+        firestorePost(
+            uid = userState.uid,
+            title = challenge.title,
+            caption = caption,
+            date = challenge.date,
+            contentUri = imageLink,
+            likes = emptyList(),
+            postId = postId,
+            userName = userState.userName,
+            userHandle = userState.userHandle,
+            userProfile = userState.profilePicUrl
+        )
+    )
 
     // Add Completed Challenge to US
     val challengeId = "Challenge/" + challenge.id.toString()
@@ -233,7 +242,6 @@ fun postPost(userState:UserState, challenge: Challenge, imageLink: String, capti
         streakCount = userState.streakCount,
         completedCount = userState.completedCount+1,
         friendsCount = userState.friendsCount,
-        profilePicture = userState.profilePicture,
         completedChallenges = userState.completedChallenges + challenge,
         currentChallenges = userState.currentChallenges,
         friendsUID = userState.friendsUID,
