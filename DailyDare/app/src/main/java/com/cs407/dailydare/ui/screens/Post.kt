@@ -1,8 +1,12 @@
 package com.cs407.dailydare.ui.screens
 
 import android.Manifest
+import android.content.ContentValues
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -64,13 +68,32 @@ fun PostScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // Function to create a new URI for each photo
+    fun createPhotoUri(): Uri? {
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "IMG_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/DailyDare")
+            }
+        }
+        return context.contentResolver.insert(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            contentValues
+        )
+    }
+
+    // Store the current photo URI
+    var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
+
     // Camera permission launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permission granted, can now take photo
-            showMediaOptions = true
+            // Create new URI and launch camera
+            currentPhotoUri = createPhotoUri()
+            currentPhotoUri?.let { cameraLauncher.launch(it) }
         }
     }
 
@@ -81,12 +104,21 @@ fun PostScreen(
         selectedMediaUri = uri
     }
 
-    // Camera launcher (takes a photo)
+    // Camera launcher - FULL RESOLUTION photo
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        // TODO: Convert bitmap to URI and save
-        // For now, just handle the bitmap
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && currentPhotoUri != null) {
+            // Photo was taken successfully, set it as selected media
+            selectedMediaUri = currentPhotoUri
+        } else if (!success && currentPhotoUri != null) {
+            // User cancelled, delete the empty file
+            try {
+                context.contentResolver.delete(currentPhotoUri!!, null, null)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     Scaffold(
@@ -180,9 +212,12 @@ fun PostScreen(
                                 context,
                                 Manifest.permission.CAMERA
                             ) -> {
-                                cameraLauncher.launch(null)
+                                // Permission already granted, create URI and launch camera
+                                currentPhotoUri = createPhotoUri()
+                                currentPhotoUri?.let { cameraLauncher.launch(it) }
                             }
                             else -> {
+                                // Request permission
                                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                             }
                         }
