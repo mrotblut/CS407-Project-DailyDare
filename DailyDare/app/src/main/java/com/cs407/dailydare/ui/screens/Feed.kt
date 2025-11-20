@@ -37,7 +37,6 @@ import com.cs407.dailydare.ui.components.BottomNavigationBar
 import com.cs407.dailydare.ui.components.TopNavigationBar
 import com.cs407.dailydare.data.UserState
 import com.cs407.dailydare.data.getFeedPosts
-import com.cs407.dailydare.data.firestoreUserChallenges
 import com.cs407.dailydare.data.getUserData
 import com.cs407.dailydare.utils.PhotoUploadManager.fetchPainter
 import com.google.firebase.Firebase
