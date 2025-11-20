@@ -11,7 +11,6 @@ data class UserState(
     val streakCount: Int = 0,
     val completedCount: Int = 0,
     val friendsCount: Int = 0,
-    val profilePicture: Painter? = null,
     val completedChallenges: List<Challenge> = emptyList(),
     val currentChallenges: Challenge = Challenge(),
     val friendsUID: List<String> = emptyList(),

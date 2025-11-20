@@ -86,6 +86,23 @@ fun PostScreen(
     // Store the current photo URI
     var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
 
+    // Camera launcher - FULL RESOLUTION photo
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && currentPhotoUri != null) {
+            // Photo was taken successfully, set it as selected media
+            selectedMediaUri = currentPhotoUri
+        } else if (!success && currentPhotoUri != null) {
+            // User cancelled, delete the empty file
+            try {
+                context.contentResolver.delete(currentPhotoUri!!, null, null)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     // Camera permission launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -104,22 +121,6 @@ fun PostScreen(
         selectedMediaUri = uri
     }
 
-    // Camera launcher - FULL RESOLUTION photo
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success && currentPhotoUri != null) {
-            // Photo was taken successfully, set it as selected media
-            selectedMediaUri = currentPhotoUri
-        } else if (!success && currentPhotoUri != null) {
-            // User cancelled, delete the empty file
-            try {
-                context.contentResolver.delete(currentPhotoUri!!, null, null)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
 
     Scaffold(
         containerColor = backgroundColor,
@@ -371,7 +372,7 @@ fun PostScreenPreview() {
         onNavigateToFriends = {},
         onNavigateToNotifications = {},
         onNavigationToProfile = {},
-        challenge = Challenge(0,"Do 10 Jumping Jacks", format.parse("11/13/2025")!!, imageRes = 0,"Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?"),
+        challenge = Challenge(0,"Do 10 Jumping Jacks", format.parse("11/13/2025")!!, imageLink = "https://i.ibb.co/Hpn6Q27v/jump.jpg","Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?"),
         onPost = {s1,s2->}
     )
 }

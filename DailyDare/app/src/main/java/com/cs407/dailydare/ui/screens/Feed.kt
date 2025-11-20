@@ -38,7 +38,6 @@ import com.cs407.dailydare.ui.components.TopNavigationBar
 import com.cs407.dailydare.data.UserState
 import com.cs407.dailydare.data.getFeedPosts
 import com.cs407.dailydare.data.getUserData
-import com.cs407.dailydare.utils.PhotoUploadManager.fetchPainter
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
@@ -224,12 +223,12 @@ fun PostCard(
     val defaultUser = painterResource(id = R.drawable.default_user)
     var userImage: Painter = defaultUser
     if (post.profilePicture.isNotEmpty()) {
-        fetchPainter(post.profilePicture, {img -> userImage = img?:defaultUser})
+        userImage = rememberAsyncImagePainter(model = post.profilePicture)
     }
 
-    var postImg: Painter? = null
-    if (post.profilePicture.isNotEmpty()) {
-        fetchPainter(post.contentUri, {img -> postImg = img})
+    var postImg: Painter? = painterResource(id = R.drawable.wireframe)
+    if (post.contentUri.isNotEmpty()) {
+        postImg = rememberAsyncImagePainter(model = post.contentUri)
     }
     Card(
         modifier = Modifier
@@ -299,7 +298,7 @@ fun PostCard(
 
             if (postImg != null) {
                 Image(
-                    painter = postImg!!,
+                    painter = postImg,
                     contentDescription = "Post image",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -363,13 +362,14 @@ fun PostCard(
 fun feedPreview(){
     val format = SimpleDateFormat("yyyy-MM-dd")
     val sampleCompletedChallenges = listOf(
-        Challenge(1, "Do 10 jumping jacks in a funny place", format.parse("2025-10-31")!!, R.drawable.wireframe,""),
-        Challenge(2, "Recreate a famous movie scene", format.parse("2025-10-30")!!, R.drawable.wireframe,""),
-        Challenge(3, "Build a pillow fort", format.parse("2025-10-29")!!, R.drawable.wireframe,"")
+        Challenge(1, "Do 10 jumping jacks in a funny place", format.parse("2025-10-31")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg",""),
+        Challenge(2, "Recreate a famous movie scene", format.parse("2025-10-30")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg",""),
+        Challenge(3, "Build a pillow fort", format.parse("2025-10-29")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg","")
     )
 
     val sampleCurrentChallenge = Challenge(4, "Try a new hobby for 1 hour",
-        format.parse("2025-11-15")!!, R.drawable.wireframe,"Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
+        format.parse("2025-11-15")!!, "https://centralca.cdn-anvilcms.net/media/images/2021/11/24/images/Ideal_Hobbies_pix_11-24-21.max-2400x1350.jpg","Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
+
     val user = UserState(
         uid = "SAMPLEUSER",
         userName = "IShowSpeed",
@@ -378,8 +378,7 @@ fun feedPreview(){
         completedCount = sampleCompletedChallenges.size,
         friendsCount = 12,
         completedChallenges = sampleCompletedChallenges,
-        currentChallenges = sampleCurrentChallenge,
-        profilePicture = painterResource(id = R.drawable.default_user)
+        currentChallenges = sampleCurrentChallenge
     )
     FeedScreen({},{},{},{},{},user)
 }

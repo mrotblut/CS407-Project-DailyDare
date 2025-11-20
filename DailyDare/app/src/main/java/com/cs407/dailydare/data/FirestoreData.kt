@@ -29,5 +29,8 @@ data class firestorePost(
     val date: Date = Date(),
     val contentUri: String = "",
     val likes: List<String> = emptyList(),
-    val postId: String = ""
+    val postId: String = "",
+    val userName:String = "",
+    val userHandle : String = "",
+    val userProfile : String = ""
 )
