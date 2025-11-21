@@ -1,13 +1,8 @@
 package com.cs407.dailydare.auth
 
-import com.cs407.dailydare.ViewModels.UserViewModel
-import com.cs407.dailydare.data.UserState
-import com.cs407.dailydare.data.createDbUser
-import com.cs407.dailydare.data.getUserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
-import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,68 +53,64 @@ fun checkPassword(password: String):PasswordResult {
 }
 
 enum class SignInResult {
-    Success,
     Error,
 }
 
 fun signIn(
     email: String,
     password: String,
-    onSignedIn: (UserState) -> Unit,
-):SignInResult {
-    var result = SignInResult.Success
+    getUserData: (String, () -> Unit) -> Unit,
+    errorCallback: (SignInResult) -> Unit,
+    onSignedIn: () -> Unit
+) {
     val auth = Firebase.auth
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (!task.isSuccessful) {
-                result = SignInResult.Error
+                errorCallback(SignInResult.Error)
             }
 
             val user = auth.currentUser ?: task.result?.user
             if (user == null) {
-                onSignedIn(UserState())
-                result = SignInResult.Error
+                errorCallback(SignInResult.Error)
 
             } else{
                 val scope = CoroutineScope(Dispatchers.IO)
-                scope.launch{getUserData(uid = user.uid,onSignedIn)}
+                scope.launch{getUserData(user.uid,onSignedIn)}
             }
 
         }
-    return result
+
 }
 
 enum class SignUpResult {
-    Success,
     Error,
 }
 
 fun createAccount(
     email: String,
     password: String,
-    onSignedIn: (UserState) -> Unit,
+    onSignedIn: () -> Unit,
+    createDbUser: (String, () -> Unit) -> Unit,
+    errorCallback:(SignUpResult) -> Unit
     //any other callback function or parameters if you want
-) : SignUpResult{
-    var result = SignUpResult.Success
+) {
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (!task.isSuccessful) {
-                onSignedIn(UserState())
-                result = SignUpResult.Error
+                errorCallback(SignUpResult.Error)
                 return@addOnCompleteListener
             }
 
             val user = auth.currentUser ?: task.result?.user
             if (user == null) {
-                onSignedIn(UserState())
-                result = SignUpResult.Error
+                errorCallback(SignUpResult.Error)
                 return@addOnCompleteListener
             }
             val scope = CoroutineScope(Dispatchers.IO)
-            scope.launch{createDbUser(uid = user.uid,onSignedIn)}
+            scope.launch{createDbUser( user.uid, onSignedIn)}
         }
-    return result
 }
 
 
