@@ -39,25 +39,25 @@ data class Notification(
     val id: Int,
     val message: String,
     val time: String,
-    val icon: Painter // Changed to Painter
+    val icon: Int
 )
 @Composable
 fun NotificationsScreen(onNavigateToHome: () -> Unit, onNavigateToChallenge:() -> Unit, onNavigateToFriends:() -> Unit, onNavigateToNotifications:() -> Unit, onNavigationToProfile:() -> Unit){
 
     // Sample data for the preview and initial state
     val notifications = listOf(
-        Notification(1, "Liam liked your post", "1h", painterResource(id = R.drawable.default_user)),
+        Notification(1, "Liam liked your post", "1h",  R.drawable.default_user),
         Notification(2, "Sophia tagged you in a comment", "2h",
-            painterResource(id = R.drawable.default_user)
+             R.drawable.default_user
         ),
         Notification(3, "New Daily Dare: Do 30 seconds of Jumping Jacks", "3h",
-            painterResource(id = R.drawable.flare_icon)
+            R.drawable.flare_icon
         ),
         Notification(4, "Ethan liked your post", "4h",
-            painterResource(id = R.drawable.default_user)
+            R.drawable.default_user
         ),
         Notification(5, "Olivia tagged you in a comment", "6h",
-            painterResource(id = R.drawable.default_user)
+            R.drawable.default_user
         )
     )
 
@@ -104,7 +104,7 @@ fun NotificationsScreen(onNavigateToHome: () -> Unit, onNavigateToChallenge:() -
                     NotificationItem(
                         message = notification.message,
                         time = notification.time,
-                        profilePicture = notification.icon
+                        profilePicture = painterResource(id = notification.icon)
                     )
                     HorizontalDivider(
                         color = Color.LightGray.copy(alpha = 0.5f),

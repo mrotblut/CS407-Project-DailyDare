@@ -1,5 +1,6 @@
 package com.cs407.dailydare.data
 
+import androidx.compose.ui.graphics.painter.Painter
 import com.google.firebase.firestore.DocumentReference
 import java.util.Date
 
@@ -33,4 +34,11 @@ data class firestorePost(
     val userName:String = "",
     val userHandle : String = "",
     val userProfile : String = ""
+)
+
+data class firestoreNotification(
+    val message: String,
+    val date: Date,
+    val type: String,
+    val uid: String
 )

@@ -1,12 +1,21 @@
 package com.cs407.dailydare.ViewModels
 
+import android.R.attr.query
 import android.util.Log
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.ViewModel
+import com.cs407.dailydare.R
 import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.data.Post
 import com.cs407.dailydare.data.UserState
+import com.cs407.dailydare.data.firestoreFriendRequest
+import com.cs407.dailydare.data.firestoreFriends
+import com.cs407.dailydare.data.firestoreNotification
 import com.cs407.dailydare.data.firestorePost
 import com.cs407.dailydare.data.firestoreUser
+import com.cs407.dailydare.data.userFriend
+import com.cs407.dailydare.ui.screens.Notification
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -17,8 +26,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.time.Duration
 
 class UserViewModel : ViewModel() {
     private val _userState = MutableStateFlow(UserState())
@@ -71,6 +84,17 @@ class UserViewModel : ViewModel() {
         val completedChallenges = getChallenges(userInfo.completedChallengeRef)
         val friends = getFriends(uid)
         Log.w("After-getFriends-gUD",friends.toString())
+        val format = DateTimeFormatter.ofPattern("yyyyMMdd")
+        val yesterday = LocalDate.now().minusDays(1).format(format)
+        val today = LocalDate.now().format(format)
+        val streakCount =
+            if ("Challenge/$yesterday" in userInfo.completedChallengeRef) {
+            userInfo.streakCount
+            } else if ("Challenge/$today" in userInfo.completedChallengeRef){
+                1
+            } else {
+                0
+            }
 
 
         var curChal = Challenge()
@@ -80,7 +104,7 @@ class UserViewModel : ViewModel() {
             uid = userInfo.uid,
             userName = userInfo.userName,
             userHandle = userInfo.userHandle,
-            streakCount = userInfo.streakCount,
+            streakCount = streakCount,
             completedCount = userInfo.completedCount,
             friendsCount = friends.size,
             completedChallenges = completedChallenges,
@@ -160,9 +184,10 @@ class UserViewModel : ViewModel() {
     }
 
     suspend fun getTodayChallenge(callback: (Challenge) -> Unit){
-        val format = SimpleDateFormat("MM/dd/YYYY")
+        val format = DateTimeFormatter.ofPattern("yyyyMMdd")
+        val today = LocalDate.now().format(format)
         val db = Firebase.firestore
-        val task = db.collection("Challenge").document("20251115") // TODO: Implement Date when more challenges are added
+        val task = db.collection("Challenge").document(today)
             .get().await()
         callback(task.toObject<Challenge>()!!)
     }
@@ -239,7 +264,7 @@ class UserViewModel : ViewModel() {
                 uid = userState.value.uid,
                 title = challenge.title,
                 caption = caption,
-                date = challenge.date,
+                date = Date(),
                 contentUri = imageLink,
                 likes = emptyList(),
                 postId = postId,
@@ -270,15 +295,100 @@ class UserViewModel : ViewModel() {
     }
 
     fun friendRequest(friendUID: String){
-        TODO()
+        val db = Firebase.firestore
+        val docRef = db.collection("friendRequests")
+        val request = firestoreFriendRequest(from = userState.value.uid,to = friendUID)
+        docRef.document("${userState.value.uid}--${friendUID}").set(request)
     }
 
     fun acceptFriendRequest(newFriendUID: String){
-        TODO()
+        val db = Firebase.firestore
+        val docRefRequest = db.collection("friendRequests")
+        val docRefFriend = db.collection("friends")
+        docRefFriend.add(firestoreFriends(listOf(newFriendUID, userState.value.uid)))
+        docRefRequest.document("${newFriendUID}--${userState.value.uid}").delete()
+        val newUserState = UserState(
+            userState.value.uid,
+            userState.value.userName,
+            userState.value.userHandle,
+            userState.value.streakCount,
+            userState.value.completedCount,
+            userState.value.friendsCount+1,
+            userState.value.completedChallenges,
+            userState.value.currentChallenge,
+            userState.value.friendsUID+newFriendUID,
+            userState.value.profilePicUrl,
+            userState.value.completedChallengesUri
+        )
+        setUser(newUserState)
 
     }
     fun updateProfile(userName: String, userHandle: String, imageUrl: String){
-        TODO()
+        val newUserState = UserState(
+            userState.value.uid,
+            userName,
+            userHandle,
+            userState.value.streakCount,
+            userState.value.completedCount,
+            userState.value.friendsCount,
+            userState.value.completedChallenges,
+            userState.value.currentChallenge,
+            userState.value.friendsUID,
+            imageUrl,
+            userState.value.completedChallengesUri
+        )
+        setUser(newUserState)
+        updateUserData()
+    }
+
+    fun createNotification(uid:String,type:String,message:String){
+        val db = Firebase.firestore
+        val docRef = db.collection("Notifications")
+        val notification = firestoreNotification(message, Date(),type,uid)
+        docRef.add(notification)
+    }
+
+    fun getNotifications(callback: (List<Notification>) -> Unit){
+        val db = Firebase.firestore
+        val docRef = db.collection("Notifications").whereEqualTo("uid",userState.value.uid)
+        docRef.get().addOnSuccessListener { documentSnapshot ->
+            val notifications = mutableListOf<Notification>()
+            val now = Instant.now()
+            for (i in documentSnapshot) {
+                val fsNotification = i.toObject<firestoreNotification>()
+                val time = Duration.between(fsNotification.date.toInstant(), now)
+                val days = time.toDays()
+                val hours = time.minusDays(days).toHours()
+                val timeString =
+                    if (days >= 1) {
+                        "${days}d"
+                    } else if (hours > 0) {
+                        "${hours}h"
+                    } else {
+                        "now"
+                    }
+                val icon =
+                    if (fsNotification.type == "NEWLIKE") {
+                        R.drawable.heart
+                    } else if (fsNotification.type == "FRIENDREQUEST") {
+                        R.drawable.default_user
+                    } else if (fsNotification.type == "STREAK") {
+                        R.drawable.flare_icon
+                    } else{
+                        R.drawable.logo
+                    }
+                val notification = Notification(
+                    id = notifications.size + 1,
+                    message = fsNotification.message,
+                    time = timeString,
+                    icon = icon
+                )
+                notifications.add(notification)
+
+
+            }
+            callback(notifications.toList())
+        }
     }
 
 }
