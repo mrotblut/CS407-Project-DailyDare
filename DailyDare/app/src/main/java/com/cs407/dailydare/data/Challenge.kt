@@ -23,3 +23,10 @@ data class Post(
     val userHandle: String,
     val profilePicture: String,
     )
+
+data class userFriend(
+    val uid: String,
+    val userName: String,
+    val userHandle: String,
+    val profilePicture: String
+)
