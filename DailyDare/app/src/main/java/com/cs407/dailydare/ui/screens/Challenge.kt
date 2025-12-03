@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
 import com.cs407.dailydare.data.Challenge
+import com.cs407.dailydare.data.UserState
 import com.cs407.dailydare.ui.components.BottomNavigationBar
 import com.cs407.dailydare.ui.components.TopNavigationBar
 import java.text.SimpleDateFormat
@@ -34,12 +36,14 @@ fun ChallengeScreen(
     onNavigationToProfile: () -> Unit,
     onNavigateToPost: () -> Unit = {},
     challenge: Challenge,
+    userState: UserState
 ) {
     val challengeTitle = challenge.title
     val challengeDescription = challenge.description
     val challengeImageRes = challenge.imageLink
     val backgroundColor = colorResource(id = R.color.app_background)
     val buttonColor = colorResource(id = R.color.button_primary)
+    val grayButtonColor = colorResource(id = R.color.gray)
 
     Scaffold(
         topBar = {
@@ -118,27 +122,52 @@ fun ChallengeScreen(
                     )
 
                     // Submit Proof Button
-                    Button(
-                        onClick = onNavigateToPost,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
-                        shape = RoundedCornerShape(28.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Camera",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Submit Proof",
-                            color = Color.White,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                    if ("Challenge/${userState.currentChallenge.id}" !in userState.completedChallengesUri) {
+                        Button(
+                            onClick = onNavigateToPost,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
+                            shape = RoundedCornerShape(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Camera",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Submit Proof",
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = onNavigateToHome,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = grayButtonColor),
+                            shape = RoundedCornerShape(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Check",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Challenge Completed",
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }
@@ -146,18 +175,3 @@ fun ChallengeScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ChallengeScreenPreview() {
-    val format = SimpleDateFormat("yyyy-MM-dd")
-    ChallengeScreen(
-        onNavigateToHome = {},
-        onNavigateToChallenge = {},
-        onNavigateToFriends = {},
-        onNavigateToNotifications = {},
-        onNavigationToProfile = {},
-        onNavigateToPost = {},
-        challenge = Challenge(4, "Try a new hobby for 1 hour",
-            format.parse("2025-11-15")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg","Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
-    )
-}

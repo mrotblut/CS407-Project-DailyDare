@@ -257,26 +257,26 @@ fun PostScreen(
                 }
 
                 // Record Video button
-                OutlinedButton(
-                    onClick = {
+                //OutlinedButton(
+                //    onClick = {
                         // TODO: Implement video recording
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = buttonColor
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Videocam,
-                        contentDescription = "Video",
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Record Video")
-                }
+                //    },
+                //    modifier = Modifier
+                //        .fillMaxWidth()
+                //        .height(50.dp),
+                //    shape = RoundedCornerShape(12.dp),
+                //    colors = ButtonDefaults.outlinedButtonColors(
+                //        contentColor = buttonColor
+                //    )
+                //) {
+                //    Icon(
+                //        imageVector = Icons.Default.Videocam,
+                //        contentDescription = "Video",
+                //        modifier = Modifier.size(20.dp)
+                //    )
+                //    Spacer(modifier = Modifier.width(8.dp))
+                //    Text("Record Video")
+                //}
             }
 
             Spacer(modifier = Modifier.height(24.dp))

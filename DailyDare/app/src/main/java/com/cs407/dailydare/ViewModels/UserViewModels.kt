@@ -291,7 +291,7 @@ class UserViewModel : ViewModel() {
                     likes.add(uid)
                     createNotification(post.uid,"NEWLIKE","${userState.value.userName} liked your post ${post.title}.")
                 }
-                post = firestorePost(post.uid,post.title,post.caption,post.date,post.contentUri,likes,post.postId)
+                post = firestorePost(post.uid,post.title,post.caption,post.date,post.contentUri,likes,post.postId, post.userName,post.userHandle,post.userProfile)
                 docRef.set(post)
 
 
