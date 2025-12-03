@@ -294,6 +294,10 @@ class UserViewModel : ViewModel() {
         updateUserData()
     }
 
+    fun searchFriends(search: String, callback: (List<userFriend>) -> Unit) {
+        TODO()
+    }
+
     fun friendRequest(friendUID: String){
         val db = Firebase.firestore
         val docRef = db.collection("friendRequests")
