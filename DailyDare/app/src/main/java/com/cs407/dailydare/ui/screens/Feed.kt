@@ -12,9 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.outlined.Comment
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,25 +25,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
-import com.cs407.dailydare.data.Challenge
+import com.cs407.dailydare.ViewModels.UserViewModel
 import com.cs407.dailydare.data.Post
 import com.cs407.dailydare.ui.components.BottomNavigationBar
 import com.cs407.dailydare.ui.components.TopNavigationBar
 import com.cs407.dailydare.data.UserState
-import com.cs407.dailydare.data.getFeedPosts
-import com.cs407.dailydare.data.firestoreUserChallenges
-import com.cs407.dailydare.data.getUserData
-import com.cs407.dailydare.utils.PhotoUploadManager.fetchPainter
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +44,8 @@ fun FeedScreen(
     onNavigateToFriends: () -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigationToProfile: () -> Unit,
-    userState: UserState = UserState()
+    userState: UserState,
+    userViewModel: UserViewModel
 ) {
     var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -64,13 +55,13 @@ fun FeedScreen(
     fun refreshPosts() {
         coroutineScope.launch {
             isRefreshing = true
-            getFeedPosts(userState, {newList -> posts = newList})
+            userViewModel.getFeedPosts { newList -> posts = newList }
             isRefreshing = false
         }
     }
 
     LaunchedEffect(Unit) {
-        getFeedPosts(userState, {newList -> posts = newList})
+        userViewModel.getFeedPosts { newList -> posts = newList }
         isLoading = false
     }
 
@@ -114,7 +105,7 @@ fun FeedScreen(
                     ) {
                         item {
                             CurrentChallengeCard(
-                                challengeTitle = userState.currentChallenges.title,
+                                challengeTitle = userState.currentChallenge.title,
                                 onChallengeClick = onNavigateToChallenge
                             )
                         }
@@ -225,12 +216,12 @@ fun PostCard(
     val defaultUser = painterResource(id = R.drawable.default_user)
     var userImage: Painter = defaultUser
     if (post.profilePicture.isNotEmpty()) {
-        fetchPainter(post.profilePicture, {img -> userImage = img?:defaultUser})
+        userImage = rememberAsyncImagePainter(model = post.profilePicture)
     }
 
-    var postImg: Painter? = null
-    if (post.profilePicture.isNotEmpty()) {
-        fetchPainter(post.contentUri, {img -> postImg = img})
+    var postImg: Painter? = painterResource(id = R.drawable.wireframe)
+    if (post.contentUri.isNotEmpty()) {
+        postImg = rememberAsyncImagePainter(model = post.contentUri)
     }
     Card(
         modifier = Modifier
@@ -300,7 +291,7 @@ fun PostCard(
 
             if (postImg != null) {
                 Image(
-                    painter = postImg!!,
+                    painter = postImg,
                     contentDescription = "Post image",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -323,7 +314,7 @@ fun PostCard(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            Divider(color = Color.LightGray, thickness = 0.5.dp)
+            HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -357,30 +348,3 @@ fun PostCard(
 }
 
 
-
-
-@Preview
-@Composable
-fun feedPreview(){
-    val format = SimpleDateFormat("yyyy-MM-dd")
-    val sampleCompletedChallenges = listOf(
-        Challenge(1, "Do 10 jumping jacks in a funny place", format.parse("2025-10-31")!!, R.drawable.wireframe,""),
-        Challenge(2, "Recreate a famous movie scene", format.parse("2025-10-30")!!, R.drawable.wireframe,""),
-        Challenge(3, "Build a pillow fort", format.parse("2025-10-29")!!, R.drawable.wireframe,"")
-    )
-
-    val sampleCurrentChallenge = Challenge(4, "Try a new hobby for 1 hour",
-        format.parse("2025-11-15")!!, R.drawable.wireframe,"Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
-    val user = UserState(
-        uid = "SAMPLEUSER",
-        userName = "IShowSpeed",
-        userHandle = "@IShowSpeed",
-        streakCount = 7,
-        completedCount = sampleCompletedChallenges.size,
-        friendsCount = 12,
-        completedChallenges = sampleCompletedChallenges,
-        currentChallenges = sampleCurrentChallenge,
-        profilePicture = painterResource(id = R.drawable.default_user)
-    )
-    FeedScreen({},{},{},{},{},user)
-}

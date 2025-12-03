@@ -1,14 +1,16 @@
 package com.cs407.dailydare.ui.screens
 
 import android.Manifest
+import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,9 +37,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
 import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.utils.PhotoUploadManager
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Date
 
 
 @Composable
@@ -64,13 +64,49 @@ fun PostScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    // Function to create a new URI for each photo
+    fun createPhotoUri(): Uri? {
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "IMG_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/DailyDare")
+            }
+        }
+        return context.contentResolver.insert(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            contentValues
+        )
+    }
+
+    // Store the current photo URI
+    var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Camera launcher - FULL RESOLUTION photo
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && currentPhotoUri != null) {
+            // Photo was taken successfully, set it as selected media
+            selectedMediaUri = currentPhotoUri
+        } else if (!success && currentPhotoUri != null) {
+            // User cancelled, delete the empty file
+            try {
+                context.contentResolver.delete(currentPhotoUri!!, null, null)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     // Camera permission launcher
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permission granted, can now take photo
-            showMediaOptions = true
+            // Create new URI and launch camera
+            currentPhotoUri = createPhotoUri()
+            currentPhotoUri?.let { cameraLauncher.launch(it) }
         }
     }
 
@@ -81,13 +117,6 @@ fun PostScreen(
         selectedMediaUri = uri
     }
 
-    // Camera launcher (takes a photo)
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        // TODO: Convert bitmap to URI and save
-        // For now, just handle the bitmap
-    }
 
     Scaffold(
         containerColor = backgroundColor,
@@ -180,9 +209,12 @@ fun PostScreen(
                                 context,
                                 Manifest.permission.CAMERA
                             ) -> {
-                                cameraLauncher.launch(null)
+                                // Permission already granted, create URI and launch camera
+                                currentPhotoUri = createPhotoUri()
+                                currentPhotoUri?.let { cameraLauncher.launch(it) }
                             }
                             else -> {
+                                // Request permission
                                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                             }
                         }
@@ -336,7 +368,7 @@ fun PostScreenPreview() {
         onNavigateToFriends = {},
         onNavigateToNotifications = {},
         onNavigationToProfile = {},
-        challenge = Challenge(0,"Do 10 Jumping Jacks", format.parse("11/13/2025")!!, imageRes = 0,"Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?"),
+        challenge = Challenge(0,"Do 10 Jumping Jacks", format.parse("11/13/2025")!!, imageLink = "https://i.ibb.co/Hpn6Q27v/jump.jpg","Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?"),
         onPost = {s1,s2->}
     )
 }

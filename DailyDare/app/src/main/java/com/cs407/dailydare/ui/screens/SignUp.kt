@@ -62,7 +62,7 @@ fun SignUpScreen(
                 .background(Color.White.copy(alpha = 0.8f), CircleShape)
         ) {
             Icon(
-                imageVector = Icons.Filled.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
                 tint = colorResource(id = R.color.black)
             )

@@ -1,13 +1,8 @@
 package com.cs407.dailydare.auth
 
-import com.cs407.dailydare.ViewModels.UserViewModel
-import com.cs407.dailydare.data.UserState
-import com.cs407.dailydare.data.createDbUser
-import com.cs407.dailydare.data.getUserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
-import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -59,7 +54,6 @@ fun checkPassword(password: String):PasswordResult {
 }
 
 enum class SignInResult {
-    Success,
     Error,
 }
 
@@ -91,7 +85,6 @@ fun signIn(
 }
 
 enum class SignUpResult {
-    Success,
     Error,
 }
 
