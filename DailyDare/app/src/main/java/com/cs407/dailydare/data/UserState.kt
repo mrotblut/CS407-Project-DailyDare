@@ -11,5 +11,6 @@ data class UserState(
     val currentChallenge: Challenge = Challenge(),
     val friendsUID: List<String> = emptyList(),
     val profilePicUrl: String = "",
-    val completedChallengesUri: List<String> = emptyList()
+    val completedChallengesUri: List<String> = emptyList(),
+    val friendsUserStates: List<userFriend> = emptyList()
 )
