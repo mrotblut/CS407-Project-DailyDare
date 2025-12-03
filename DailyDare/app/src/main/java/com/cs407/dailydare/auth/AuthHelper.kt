@@ -6,6 +6,7 @@ import com.google.firebase.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 enum class EmailResult {
@@ -59,28 +60,28 @@ enum class SignInResult {
 fun signIn(
     email: String,
     password: String,
-    getUserData: (String, () -> Unit) -> Unit,
-    errorCallback: (SignInResult) -> Unit,
-    onSignedIn: () -> Unit
+    onSignedIn: (UserState) -> Unit,
 ) {
     val auth = Firebase.auth
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                errorCallback(SignInResult.Error)
+            if (task.isSuccessful) {
+                val user = auth.currentUser
+                if (user != null) {
+                    val scope = CoroutineScope(Dispatchers.Main)
+                    scope.launch {
+                        getUserData(uid = user.uid) { userState ->
+                            onSignedIn(userState)
+                        }
+                    }
+                } else {
+                    onSignedIn(UserState())
+                }
+            } else {
+                // if the task is not successful, sign in failed.
+                onSignedIn(UserState())
             }
-
-            val user = auth.currentUser ?: task.result?.user
-            if (user == null) {
-                errorCallback(SignInResult.Error)
-
-            } else{
-                val scope = CoroutineScope(Dispatchers.IO)
-                scope.launch{getUserData(user.uid,onSignedIn)}
-            }
-
         }
-
 }
 
 enum class SignUpResult {
@@ -90,26 +91,28 @@ enum class SignUpResult {
 fun createAccount(
     email: String,
     password: String,
-    onSignedIn: () -> Unit,
-    createDbUser: (String, () -> Unit) -> Unit,
-    errorCallback:(SignUpResult) -> Unit
-    //any other callback function or parameters if you want
-) {
+    onAccountCreated: (UserState) -> Unit,
+){
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                errorCallback(SignUpResult.Error)
-                return@addOnCompleteListener
+            if (task.isSuccessful) {
+                val user = auth.currentUser
+                if (user != null) {
+                    // successfully created user, now create their database entry
+                    val scope = CoroutineScope(Dispatchers.Main)
+                    scope.launch {
+                        createDbUser(uid = user.uid) { userState ->
+                            onAccountCreated(userState)
+                        }
+                    }
+                } else {
+                    onAccountCreated(UserState())
+                }
+            } else {
+                // If account creation fails (e.g., email already in use),
+                onAccountCreated(UserState())
             }
-
-            val user = auth.currentUser ?: task.result?.user
-            if (user == null) {
-                errorCallback(SignUpResult.Error)
-                return@addOnCompleteListener
-            }
-            val scope = CoroutineScope(Dispatchers.IO)
-            scope.launch{createDbUser( user.uid, onSignedIn)}
         }
 }
 
