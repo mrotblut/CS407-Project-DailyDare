@@ -1,6 +1,13 @@
 <resources>
     <string name="app_name">DailyDare</string>
     <string name="login_slogan">"Sign in to join the fun!"</string>
-    <string name="login">Login</string>
-    <string name="sign_up">Sign Up</string>
+    <string name="login_button">Login</string>
+    <string name="sign_up_button">Sign Up</string>
+    <string name="create_account_button">Create Account</string>"
+    <string name="empty_email">Please enter an email address.</string>
+    <string name="invalid_email">Please enter a valid email address.</string>
+    <string name="empty_password">Please enter a password.</string>"
+    <string name="short_password">Password must be at least 5 characters long.</string>
+    <string name="invalid_password">Password must contain at least one uppercase letter, one lowercase letter, and one number.</string>
+    <string name="confirm_password_failed">Passwords in both fields need to match.</string>
 </resources>

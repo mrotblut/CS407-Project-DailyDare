@@ -11,6 +11,7 @@ import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 enum class EmailResult {
@@ -66,27 +67,27 @@ fun signIn(
     email: String,
     password: String,
     onSignedIn: (UserState) -> Unit,
-):SignInResult {
-    var result = SignInResult.Success
+) {
     val auth = Firebase.auth
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                result = SignInResult.Error
-            }
-
-            val user = auth.currentUser ?: task.result?.user
-            if (user == null) {
+            if (task.isSuccessful) {
+                val user = auth.currentUser
+                if (user != null) {
+                    val scope = CoroutineScope(Dispatchers.Main)
+                    scope.launch {
+                        getUserData(uid = user.uid) { userState ->
+                            onSignedIn(userState)
+                        }
+                    }
+                } else {
+                    onSignedIn(UserState())
+                }
+            } else {
+                // if the task is not successful, sign in failed.
                 onSignedIn(UserState())
-                result = SignInResult.Error
-
-            } else{
-                val scope = CoroutineScope(Dispatchers.IO)
-                scope.launch{getUserData(uid = user.uid,onSignedIn)}
             }
-
         }
-    return result
 }
 
 enum class SignUpResult {
@@ -97,29 +98,29 @@ enum class SignUpResult {
 fun createAccount(
     email: String,
     password: String,
-    onSignedIn: (UserState) -> Unit,
-    //any other callback function or parameters if you want
-) : SignUpResult{
-    var result = SignUpResult.Success
+    onAccountCreated: (UserState) -> Unit,
+){
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                onSignedIn(UserState())
-                result = SignUpResult.Error
-                return@addOnCompleteListener
+            if (task.isSuccessful) {
+                val user = auth.currentUser
+                if (user != null) {
+                    // successfully created user, now create their database entry
+                    val scope = CoroutineScope(Dispatchers.Main)
+                    scope.launch {
+                        createDbUser(uid = user.uid) { userState ->
+                            onAccountCreated(userState)
+                        }
+                    }
+                } else {
+                    onAccountCreated(UserState())
+                }
+            } else {
+                // If account creation fails (e.g., email already in use),
+                onAccountCreated(UserState())
             }
-
-            val user = auth.currentUser ?: task.result?.user
-            if (user == null) {
-                onSignedIn(UserState())
-                result = SignUpResult.Error
-                return@addOnCompleteListener
-            }
-            val scope = CoroutineScope(Dispatchers.IO)
-            scope.launch{createDbUser(uid = user.uid,onSignedIn)}
         }
-    return result
 }
 
 

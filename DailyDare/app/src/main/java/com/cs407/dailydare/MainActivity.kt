@@ -153,7 +153,7 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                     onNavigateToChallenge = { navController.navigate("Challenge") },
                     onNavigateToNotifications = { navController.navigate("Notifications") },
                     onNavigateToProfile = { navController.navigate("Profile") },
-                    onEditProfile = {}
+                    onEditProfile = {},
                     onLogout = {
                         Firebase.auth.signOut()
                         navController.navigate("SignIn") {
