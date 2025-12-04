@@ -90,7 +90,7 @@ class UserViewModel : ViewModel() {
         val today = LocalDate.now().format(format)
         val streakCount =
             if ("Challenge/$yesterday" in userInfo.completedChallengeRef) {
-            userInfo.streakCount
+                userInfo.streakCount
             } else if ("Challenge/$today" in userInfo.completedChallengeRef){
                 1
             } else {
@@ -416,6 +416,31 @@ class UserViewModel : ViewModel() {
         setUser(newUserState)
         createNotification(newFriendUID,"NEWFRIEND","${userState.value.userName} has accepted your friend request!")
 
+    }
+
+    fun declineFriendRequest(friendUID: String) {
+        val db = Firebase.firestore
+        val docRefRequest = db.collection("friendRequests")
+        docRefRequest.document("${friendUID}--${userState.value.uid}").delete()
+        val friend = userState.value.friendRequest.find { it.uid == friendUID }
+        if (friend != null) {
+            val newUserState = UserState(
+                userState.value.uid,
+                userState.value.userName,
+                userState.value.userHandle,
+                userState.value.streakCount,
+                userState.value.completedCount,
+                userState.value.friendsCount,
+                userState.value.completedChallenges,
+                userState.value.currentChallenge,
+                userState.value.friendsUID,
+                userState.value.profilePicUrl,
+                userState.value.completedChallengesUri,
+                friendsUserStates = userState.value.friendsUserStates,
+                friendRequest = userState.value.friendRequest - friend
+            )
+            setUser(newUserState)
+        }
     }
     fun updateProfile(userName: String, userHandle: String, imageUrl: String){
         val newUserState = UserState(
