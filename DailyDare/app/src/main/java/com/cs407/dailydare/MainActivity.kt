@@ -159,6 +159,7 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
             EditProfileScreen (
                 userState = userState,
                 onNavigateToProfile = { navController.navigate("Profile") },
+                userViewModel = userViewModel
             )
         }
         composable("SignIn") {

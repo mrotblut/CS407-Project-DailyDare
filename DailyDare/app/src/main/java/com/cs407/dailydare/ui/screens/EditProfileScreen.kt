@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
+import com.cs407.dailydare.ViewModels.UserViewModel
 import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.data.UserState
 import com.cs407.dailydare.utils.PhotoUploadManager
@@ -49,16 +51,18 @@ import java.text.SimpleDateFormat
 fun EditProfileScreen(
     userState: UserState,
     onNavigateToProfile: () -> Unit,
+    userViewModel : UserViewModel
 ) {
     val backgroundColor = colorResource(id = R.color.app_background)
     val buttonColor = colorResource(id = R.color.button_primary)
-    val textFieldColor = colorResource(id = R.color.textfield_background)
 
-    var caption by remember { mutableStateOf(TextFieldValue("")) }
     var selectedMediaUri by remember { mutableStateOf<Uri?>(null) }
-    var showMediaOptions by remember { mutableStateOf(false) }
     var isUploading by remember { mutableStateOf(false) }
     var uploadError by remember { mutableStateOf<String?>(null) }
+
+    val textFieldColor = colorResource(id = R.color.textfield_background)
+    val handle = remember { mutableStateOf(userState.userHandle) }
+    val name = remember { mutableStateOf(userState.userName) }
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -156,10 +160,55 @@ fun EditProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ProfileImage(
-                    userName = userState.userName,
-                    userHandle = userState.userHandle,
-                    profilePicture = if(userState.profilePicUrl.isEmpty()){painterResource(R.drawable.default_user)}else{rememberAsyncImagePainter(model = userState.profilePicUrl)},
+
+                Box(contentAlignment = Alignment.TopCenter) {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = selectedMediaUri?:userState.profilePicUrl),
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                //Text(text = '@'+userHandle, fontSize = 16.sp, color = Color.Gray)
+
+                OutlinedTextField(
+                    prefix = {Text("@")},
+                    value = handle.value,
+                    onValueChange = { handle.value = it },
+                    label = { Text("Handle") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = textFieldColor,
+                        unfocusedContainerColor = textFieldColor,
+                        disabledContainerColor = textFieldColor,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = buttonColor
+                    ),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+                //Spacer(modifier = Modifier.height(1.dp))
+                OutlinedTextField(
+                    value = name.value,
+                    onValueChange = { name.value = it },
+                    label = { Text("User Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = textFieldColor,
+                        unfocusedContainerColor = textFieldColor,
+                        disabledContainerColor = textFieldColor,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = buttonColor
+                    ),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -235,7 +284,22 @@ fun EditProfileScreen(
             // Edit button
             Button(
                 onClick = {
-                    // TODO: SAVE LOGIC
+                    if (selectedMediaUri != null) {
+                        isUploading = true
+                        uploadError = null
+
+                        PhotoUploadManager.uploadPhoto(context, selectedMediaUri!!) { imageUrl ->
+                            isUploading = false
+
+                            if (imageUrl != null) {
+                                userViewModel.updateProfile(name.value,handle.value,imageUrl)
+                                onNavigateToProfile()
+                            } else {
+                                uploadError = "Upload failed. Check your internet connection."
+                            }
+                        }
+                    }
+                    userViewModel.updateProfile(name.value,handle.value,userState.profilePicUrl)
                     onNavigateToProfile()
                 },
                 modifier = Modifier
@@ -264,34 +328,15 @@ fun EditProfileScreen(
     }
 }
 
-@Composable
-fun ProfileImage(
-    userName: String,
-    userHandle: String,
-    profilePicture: Painter,
-) {
-    Box(contentAlignment = Alignment.TopCenter) {
-        Image(
-            painter = profilePicture,
-            contentDescription = "Profile Picture",
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop
-        )
-    }
-
-    Spacer(modifier = Modifier.height(16.dp))
-
-    Text(text = '@'+userHandle, fontSize = 16.sp, color = Color.Gray)
-}
+val previewUVM = UserViewModel()
 
 @Preview(showBackground = true, backgroundColor = 0xFFF8F8FF)
 @Composable
 fun EditProfileScreenPreview() {
     val format = SimpleDateFormat("MM/dd/yyyy")
     EditProfileScreen (
-        userState = UserState(),
+        userState = UserState(userHandle = "merp", userName = "Mr. Merp", profilePicUrl = "https://i.ibb.co/Lh2BnV7T/default-user.png"),
         onNavigateToProfile = {},
+        userViewModel = previewUVM
     )
 }
