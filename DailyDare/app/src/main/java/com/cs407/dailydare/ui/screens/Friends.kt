@@ -48,6 +48,9 @@ fun FriendsScreen(
     userViewModel: UserViewModel,
     userState: UserState
 ) {
+    LaunchedEffect(Unit){
+        userViewModel.updateFriends()
+    }
     var searchQuery by remember { mutableStateOf("") }
     var searchResults by remember { mutableStateOf<List<userFriend>>(emptyList()) }
     var isSearching by remember { mutableStateOf(false) }

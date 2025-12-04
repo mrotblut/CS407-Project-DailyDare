@@ -47,22 +47,20 @@ fun FeedScreen(
     userState: UserState,
     userViewModel: UserViewModel
 ) {
-    var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
+    var posts = userState.feed
     var isRefreshing by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     fun refreshPosts() {
         coroutineScope.launch {
             isRefreshing = true
-            userViewModel.getFeedPosts { newList -> posts = newList }
+            userViewModel.getFeedPosts()
             isRefreshing = false
         }
     }
 
     LaunchedEffect(Unit) {
-        userViewModel.getFeedPosts { newList -> posts = newList }
-        isLoading = false
+        userViewModel.getFeedPosts()
     }
 
     Scaffold(
@@ -86,12 +84,6 @@ fun FeedScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = colorResource(id = R.color.button_primary)
-                )
-            } else {
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
                     onRefresh = {
@@ -154,7 +146,6 @@ fun FeedScreen(
                         }
                     }
                 }
-            }
         }
     }
 }

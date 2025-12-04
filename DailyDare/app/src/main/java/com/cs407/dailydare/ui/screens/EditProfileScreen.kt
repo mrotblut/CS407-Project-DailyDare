@@ -306,8 +306,7 @@ fun EditProfileScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
-                shape = RoundedCornerShape(28.dp),
-                enabled = selectedMediaUri != null && !isUploading
+                shape = RoundedCornerShape(28.dp)
             ) {
                 if (isUploading) {
                     CircularProgressIndicator(

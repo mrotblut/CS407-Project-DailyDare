@@ -33,6 +33,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.time.Duration
+import kotlin.text.get
 
 class UserViewModel : ViewModel() {
     private val _userState = MutableStateFlow(UserState())
@@ -53,13 +54,13 @@ class UserViewModel : ViewModel() {
         val db = Firebase.firestore
 
         val querySnapshot = db.collection("friends")
-            .whereArrayContains("UID", uid).get().await()
+            .whereArrayContains("uid", uid).get().await()
 
         val friends = mutableListOf<String>()
 
         for (doc in querySnapshot) {
             // Get the array field "UID" as a list
-            val friendList = doc.get("UID") as? List<String> ?: emptyList()
+            val friendList = doc.get("uid") as? List<String> ?: emptyList()
             Log.w("getFriends",friendList.toString())
 
             if (friendList.size == 2) {
@@ -119,6 +120,7 @@ class UserViewModel : ViewModel() {
             friendRequest = friendRequest
         )
         )
+        getFeedPosts()
         onSignedIn()
 
     }
@@ -143,7 +145,8 @@ class UserViewModel : ViewModel() {
             profilePicUrl = "https://i.ibb.co/Lh2BnV7T/default-user.png",
             completedChallengesUri = emptyList(),
             friendsUserStates =  emptyList(),
-            friendRequest = emptyList()
+            friendRequest = emptyList(),
+            feed = emptyList()
         )
         val fsUserState = firestoreUser(
             uid = userState.uid,
@@ -156,6 +159,7 @@ class UserViewModel : ViewModel() {
         )
         db.collection("users").document(uid).set(fsUserState)
         setUser(userState)
+        getFeedPosts()
         Thread.sleep(2000)
         onSignedIn()
     }
@@ -172,6 +176,30 @@ class UserViewModel : ViewModel() {
             completedChallengeRef = userState.value.completedChallengesUri
         )
         db.collection("users").document(userState.value.uid).set(fsUser)
+    }
+
+    suspend fun updateFriends(){
+        val friends = getFriends(userState.value.uid)
+        val friendRequest = getFriendRequests(userState.value.uid)
+        val friendsUserStates = getFriendStates(friends)
+
+        val newUS = UserState(
+            uid = userState.value.uid,
+            userName = userState.value.userName,
+            userHandle = userState.value.userHandle,
+            streakCount = userState.value.streakCount,
+            completedCount = userState.value.completedCount,
+            friendsCount = friendsUserStates.size,
+            completedChallenges = userState.value.completedChallenges,
+            currentChallenge = userState.value.currentChallenge,
+            friendsUID = friends,
+            profilePicUrl = userState.value.profilePicUrl,
+            completedChallengesUri = userState.value.completedChallengesUri,
+            friendsUserStates = friendsUserStates,
+            friendRequest = friendRequest,
+            feed = userState.value.feed
+        )
+        setUser(newUS)
     }
 
     fun getChallenges(challenges: List<String>): List<Challenge>{
@@ -191,46 +219,35 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun getFriendRequests(uid:String): List<userFriend>{
+    suspend fun getFriendRequests(uid:String): List<userFriend>{
+        val db = Firebase.firestore
         val uids = mutableListOf<String>()
-        getFriendRequestsHelper(uid,{uid -> uids.addAll(uid)})
+        val docs = db.collection("friendRequests").whereEqualTo("to",uid).get().await()
+        for (i in docs){
+            val fr = i.toObject<firestoreFriendRequest>()
+            uids.add(fr.from)
+        }
         val ret = mutableListOf<userFriend>()
-        for (i in uids){
-            getFriendStatesHelper(i, {friend -> ret.add(friend)})
+        for (uid in uids){
+            val docs = db.collection("users").document(uid).get().await()
+            val user = docs.toObject<userFriend>()
+            if (user != null)
+                ret.add(user)
         }
         return ret.toList()
     }
-    fun getFriendRequestsHelper(uid:String, callback: (List<String>) -> Unit){
-        val db = Firebase.firestore
-        val uids = mutableListOf<String>()
-        db.collection("friendRequest").whereEqualTo("to",uid).get().addOnCompleteListener { task ->
-            if(task.isSuccessful){
-                val docs = task.result
-                for (i in docs){
-                    val fr = i.toObject<firestoreFriendRequest>()
-                    uids.add(fr.from)
-                }
-                callback(uids)
-            }
 
-        }
-    }
 
-    fun getFriendStates(friends: List<String>): List<userFriend>{
+    suspend fun getFriendStates(friends: List<String>): List<userFriend>{
         val ret = mutableListOf<userFriend>()
-        for (i in friends){
-            getFriendStatesHelper(i, {friend -> ret.add(friend)})
+        val db = Firebase.firestore
+        for (uid in friends){
+            val docs = db.collection("users").document(uid).get().await()
+            val user = docs.toObject<userFriend>()
+            if (user != null)
+                ret.add(user)
         }
         return ret.toList()
-    }
-    fun getFriendStatesHelper(uid: String, callback: (userFriend) -> Unit){
-        val db = Firebase.firestore
-        db.collection("users").document(uid).get().addOnCompleteListener { task ->
-            if(task.isSuccessful){
-                val user = task.result.toObject<userFriend>()
-                callback(user!!)
-            }
-        }
     }
 
     suspend fun getTodayChallenge(callback: (Challenge) -> Unit){
@@ -242,40 +259,54 @@ class UserViewModel : ViewModel() {
         callback(task.toObject<Challenge>()!!)
     }
 
-    fun getFeedPosts(setFeed: (List<Post>) -> Unit){
-        if(userState.value.friendsCount==0){setFeed(emptyList()); return}
+    suspend fun getFeedPosts(){
+        if(userState.value.friendsCount==0){return}
         val friends = userState.value.friendsUID + userState.value.uid
         Log.w("gFP",friends.toString())
         val db = Firebase.firestore
         val docRef = db.collection("posts").whereIn("uid",friends)
-        docRef.get().addOnSuccessListener { documentSnapshot  ->
-            val posts = mutableListOf<Post>()
-            Log.w("gFP",documentSnapshot.size().toString())
-            for (i in documentSnapshot){
-                val fsPost = i.toObject<firestorePost>()
-                val post = Post(
-                    uid = fsPost.uid,
-                    postId = i.id,
-                    title = fsPost.title,
-                    caption = fsPost.caption,
-                    date = fsPost.date,
-                    contentUri = fsPost.contentUri,
-                    likes = fsPost.likes.size,
-                    isLiked = userState.value.uid in fsPost.likes,
-                    userName = fsPost.userName,
-                    userHandle = fsPost.userHandle,
-                    profilePicture = fsPost.userProfile
-                )
-                posts.add(post)
-            }
-            Log.w("gFP",posts.toString())
-            posts.sortByDescending { it.date }
-            setFeed(posts)
-            return@addOnSuccessListener
+        val documentSnapshot = docRef.get().await()
+        val posts = mutableListOf<Post>()
+        Log.w("gFP",documentSnapshot.size().toString())
+        for (i in documentSnapshot){
+            val fsPost = i.toObject<firestorePost>()
+            val user = db.collection("users").document(fsPost.uid).get().await()
+            val userPost = user.toObject<userFriend>()
+            val post = Post(
+                uid = fsPost.uid,
+                postId = i.id,
+                title = fsPost.title,
+                caption = fsPost.caption,
+                date = fsPost.date,
+                contentUri = fsPost.contentUri,
+                likes = fsPost.likes.size,
+                isLiked = userState.value.uid in fsPost.likes,
+                userName = userPost?.userName?: fsPost.userName,
+                userHandle = userPost?.userHandle?: fsPost.userHandle,
+                profilePicture = userPost?.profilePicture?: fsPost.userProfile
+            )
+            posts.add(post)
         }
-            .addOnFailureListener { e->
-                Log.w("gFP-error",e.toString())
-            }
+        Log.w("gFP",posts.toString())
+        posts.sortByDescending { it.date }
+
+        val newUS = UserState(
+            uid = userState.value.uid,
+            userName = userState.value.userName,
+            userHandle = userState.value.userHandle,
+            streakCount = userState.value.streakCount,
+            completedCount = userState.value.completedCount,
+            friendsCount = userState.value.friendsCount,
+            completedChallenges = userState.value.completedChallenges,
+            currentChallenge = userState.value.currentChallenge,
+            friendsUID = userState.value.friendsUID,
+            profilePicUrl = userState.value.profilePicUrl,
+            completedChallengesUri = userState.value.completedChallengesUri,
+            friendsUserStates = userState.value.friendsUserStates,
+            friendRequest = userState.value.friendRequest,
+            feed = posts
+        )
+        setUser(newUS)
     }
 
     fun changeLikePost(postId:String){
@@ -339,7 +370,8 @@ class UserViewModel : ViewModel() {
             profilePicUrl = userState.value.profilePicUrl,
             completedChallengesUri = userState.value.completedChallengesUri + challengeId,
             friendsUserStates =  userState.value.friendsUserStates,
-            friendRequest = userState.value.friendRequest
+            friendRequest = userState.value.friendRequest,
+            feed = userState.value.feed
         )
 
         setUser(newUserState)
@@ -395,7 +427,7 @@ class UserViewModel : ViewModel() {
         val db = Firebase.firestore
         val docRefRequest = db.collection("friendRequests")
         val docRefFriend = db.collection("friends")
-        docRefFriend.add(firestoreFriends(listOf(newFriendUID, userState.value.uid)))
+        docRefFriend.document("${newFriendUID}--${userState.value.uid}").set(firestoreFriends(listOf(newFriendUID, userState.value.uid)))
         docRefRequest.document("${newFriendUID}--${userState.value.uid}").delete()
         val friend = userState.value.friendRequest.find({ it.uid == newFriendUID })
         val newUserState = UserState(
@@ -411,7 +443,8 @@ class UserViewModel : ViewModel() {
             userState.value.profilePicUrl,
             userState.value.completedChallengesUri,
             friendsUserStates =  userState.value.friendsUserStates + friend!!,
-            friendRequest = userState.value.friendRequest - friend
+            friendRequest = userState.value.friendRequest - friend,
+            feed = userState.value.feed
         )
         setUser(newUserState)
         createNotification(newFriendUID,"NEWFRIEND","${userState.value.userName} has accepted your friend request!")
@@ -437,7 +470,8 @@ class UserViewModel : ViewModel() {
                 userState.value.profilePicUrl,
                 userState.value.completedChallengesUri,
                 friendsUserStates = userState.value.friendsUserStates,
-                friendRequest = userState.value.friendRequest - friend
+                friendRequest = userState.value.friendRequest - friend,
+                feed = userState.value.feed
             )
             setUser(newUserState)
         }
@@ -456,7 +490,8 @@ class UserViewModel : ViewModel() {
             imageUrl,
             userState.value.completedChallengesUri,
             friendsUserStates =  userState.value.friendsUserStates,
-            friendRequest = userState.value.friendRequest
+            friendRequest = userState.value.friendRequest,
+            feed = userState.value.feed
         )
         setUser(newUserState)
         updateUserData()
