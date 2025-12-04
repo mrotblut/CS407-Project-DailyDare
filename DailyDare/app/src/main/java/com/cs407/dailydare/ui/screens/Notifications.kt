@@ -19,6 +19,11 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,10 +33,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.dailydare.R
+import com.cs407.dailydare.ViewModels.UserViewModel
+import com.cs407.dailydare.data.Post
 import com.cs407.dailydare.ui.components.BottomNavigationBar
 import com.cs407.dailydare.ui.components.TopNavigationBar
 
@@ -42,24 +48,14 @@ data class Notification(
     val icon: Int
 )
 @Composable
-fun NotificationsScreen(onNavigateToHome: () -> Unit, onNavigateToChallenge:() -> Unit, onNavigateToFriends:() -> Unit, onNavigateToNotifications:() -> Unit, onNavigationToProfile:() -> Unit){
+fun NotificationsScreen(onNavigateToHome: () -> Unit, onNavigateToChallenge:() -> Unit, onNavigateToFriends:() -> Unit, onNavigateToNotifications:() -> Unit, onNavigationToProfile:() -> Unit, userViewModel: UserViewModel){
 
     // Sample data for the preview and initial state
-    val notifications = listOf(
-        Notification(1, "Liam liked your post", "1h",  R.drawable.default_user),
-        Notification(2, "Sophia tagged you in a comment", "2h",
-             R.drawable.default_user
-        ),
-        Notification(3, "New Daily Dare: Do 30 seconds of Jumping Jacks", "3h",
-            R.drawable.flare_icon
-        ),
-        Notification(4, "Ethan liked your post", "4h",
-            R.drawable.default_user
-        ),
-        Notification(5, "Olivia tagged you in a comment", "6h",
-            R.drawable.default_user
-        )
-    )
+    var notifications by remember { mutableStateOf<List<Notification>>(emptyList()) }
+    LaunchedEffect(Unit) {
+        userViewModel.getNotifications { notif -> notifications = notif }
+    }
+
 
     Scaffold(
         topBar = {
@@ -162,14 +158,3 @@ fun NotificationItem(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun NotificationsScreenPreview() {
-    NotificationsScreen(
-        onNavigateToHome = {},
-        onNavigateToChallenge = {},
-        onNavigateToFriends = {},
-        onNavigateToNotifications = {},
-        onNavigationToProfile = {}
-    )
-}

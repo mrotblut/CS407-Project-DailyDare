@@ -37,8 +37,8 @@ data class firestorePost(
 )
 
 data class firestoreNotification(
-    val message: String,
-    val date: Date,
-    val type: String,
-    val uid: String
+    val message: String = "",
+    val date: Date = Date(),
+    val type: String = "",
+    val uid: String = ""
 )

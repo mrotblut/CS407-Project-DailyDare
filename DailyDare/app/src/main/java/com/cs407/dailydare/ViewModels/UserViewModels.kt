@@ -328,7 +328,7 @@ class UserViewModel : ViewModel() {
             uid = userState.value.uid,
             userName = userState.value.userName,
             userHandle = userState.value.userHandle,
-            streakCount = userState.value.streakCount,
+            streakCount = userState.value.streakCount +1 ,
             completedCount = userState.value.completedCount+1,
             friendsCount = userState.value.friendsCount,
             completedChallenges = userState.value.completedChallenges + challenge,
@@ -342,6 +342,9 @@ class UserViewModel : ViewModel() {
 
         setUser(newUserState)
         updateUserData()
+        if(userState.value.streakCount % 5 == 0 || userState.value.streakCount == 1){
+            createNotification(userState.value.uid,"STREAK","You now have a ${userState.value.streakCount} day streak!")
+        }
     }
 
     fun searchFriends(search: String, callback: (List<userFriend>) -> Unit) {
@@ -445,17 +448,21 @@ class UserViewModel : ViewModel() {
         docRef.get().addOnSuccessListener { documentSnapshot ->
             val notifications = mutableListOf<Notification>()
             val now = Instant.now()
+            Log.w("getNotifications","${documentSnapshot.size()}")
             for (i in documentSnapshot) {
                 val fsNotification = i.toObject<firestoreNotification>()
                 val time = Duration.between(fsNotification.date.toInstant(), now)
                 val days = time.toDays()
-                val hours = time.minusDays(days).toHours()
+                val hours = time.toHours()
+                val minutes = time.toMinutes()
                 val timeString =
                     if (days >= 1) {
                         "${days}d"
                     } else if (hours > 0) {
                         "${hours}h"
-                    } else {
+                    } else if (minutes > 10) {
+                        "${minutes}mins"
+                    }else{
                         "now"
                     }
                 val icon =
