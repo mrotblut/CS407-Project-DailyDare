@@ -15,12 +15,12 @@ data class firestoreUser(
 )
 
 data class firestoreFriends(
-    val UID: List<String>
+    val UID: List<String> = emptyList()
 )
 
 data class firestoreFriendRequest(
-    val from: String,
-    val to: String
+    val from: String = "",
+    val to: String = ""
 )
 
 data class firestorePost(
