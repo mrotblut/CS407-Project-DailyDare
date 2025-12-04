@@ -48,7 +48,7 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
 
     /////// Sample user //////////////
     LaunchedEffect(Unit){
-    //    userViewModel.getUserData("SAMPLEUSER", {navController.navigate("Feed")})
+        //    userViewModel.getUserData("SAMPLEUSER", {navController.navigate("Feed")})
         val user = Firebase.auth.currentUser
         if (user != null){
             navController.navigate("Feed")
@@ -107,7 +107,9 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                 onNavigateToFriends = { navController.navigate("Friends") },
                 onNavigateToChallenge = { navController.navigate("Challenge") },
                 onNavigationToProfile = { navController.navigate("Profile") },
-                onNavigateToNotifications = { navController.navigate("Notifications") }
+                onNavigateToNotifications = { navController.navigate("Notifications") },
+                userViewModel = userViewModel,
+                userState = userState
             )
         }
         composable("Notifications") {
