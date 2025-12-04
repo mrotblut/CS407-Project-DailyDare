@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cs407.dailydare.ViewModels.UserViewModel
 import com.cs407.dailydare.ui.screens.ChallengeScreen
+import com.cs407.dailydare.ui.screens.EditProfileScreen
 import com.cs407.dailydare.ui.screens.FeedScreen
 import com.cs407.dailydare.ui.screens.FriendsScreen
 import com.cs407.dailydare.ui.screens.NotificationsScreen
@@ -143,7 +144,7 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                 onNavigateToChallenge = { navController.navigate("Challenge") },
                 onNavigateToNotifications = { navController.navigate("Notifications") },
                 onNavigateToProfile = { navController.navigate("Profile") },
-                onEditProfile = {},
+                onEditProfile = { navController.navigate("EditProfile") },
                 onLogout = {
                     Firebase.auth.signOut()
                     navController.navigate("SignIn") {
@@ -154,6 +155,12 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                         launchSingleTop = true
                     }
                 }
+            )
+        }
+        composable("EditProfile") {
+            EditProfileScreen (
+                userState = userState,
+                onNavigateToProfile = { navController.navigate("Profile") },
             )
         }
         composable("SignIn") {
