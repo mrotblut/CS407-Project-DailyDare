@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cs407.dailydare.ViewModels.UserViewModel
 import com.cs407.dailydare.ui.screens.ChallengeScreen
+import com.cs407.dailydare.ui.screens.EditProfileScreen
 import com.cs407.dailydare.ui.screens.FeedScreen
 import com.cs407.dailydare.ui.screens.FriendsScreen
 import com.cs407.dailydare.ui.screens.NotificationsScreen
@@ -133,41 +134,47 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                 }
             )
         }
-            composable("Profile") {
-                ProfileScreen(
-                    userState = userState,
-                    onNavigateToHome = { navController.navigate("Feed") },
-                    onNavigateToFriends = { navController.navigate("Friends") },
-                    onNavigateToChallenge = { navController.navigate("Challenge") },
-                    onNavigateToNotifications = { navController.navigate("Notifications") },
-                    onNavigateToProfile = { navController.navigate("Profile") },
-                    onEditProfile = {},
-                    onLogout = {
-                        Firebase.auth.signOut()
-                        navController.navigate("SignIn") {
-                            // reset nav graph
-                            popUpTo(navController.graph.startDestinationId) {
-                                inclusive = true
-                            }
-                            launchSingleTop = true
+        composable("Profile") {
+            ProfileScreen(
+                userState = userState,
+                onNavigateToHome = { navController.navigate("Feed") },
+                onNavigateToFriends = { navController.navigate("Friends") },
+                onNavigateToChallenge = { navController.navigate("Challenge") },
+                onNavigateToNotifications = { navController.navigate("Notifications") },
+                onNavigateToProfile = { navController.navigate("Profile") },
+                onEditProfile = { navController.navigate("EditProfile") },
+                onLogout = {
+                    Firebase.auth.signOut()
+                    navController.navigate("SignIn") {
+                        // reset nav graph
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
                         }
+                        launchSingleTop = true
                     }
-                )
-            }
-            composable("SignIn") {
-                SignInScreen(
-                    onNavigateToSignUp = { navController.navigate("SignUp") },
-                    onNavigateToHome = { navController.navigate("Feed") },
-                    userViewModel = userViewModel
+                }
+            )
+        }
+        composable("EditProfile") {
+            EditProfileScreen (
+                userState = userState,
+                onNavigateToProfile = { navController.navigate("Profile") },
+            )
+        }
+        composable("SignIn") {
+            SignInScreen(
+                onNavigateToSignUp = { navController.navigate("SignUp") },
+                onNavigateToHome = { navController.navigate("Feed") },
+                userViewModel = userViewModel
 
-                )
-            }
-            composable("SignUp") {
-                SignUpScreen(
-                    onNavigateToSignIn = { navController.navigate("SignIn") },
-                    onNavigateToProfile = { navController.navigate("Profile") },
-                    userViewModel = userViewModel
-                )
-            }
+            )
+        }
+        composable("SignUp") {
+            SignUpScreen(
+                onNavigateToSignIn = { navController.navigate("SignIn") },
+                onNavigateToProfile = { navController.navigate("Profile") },
+                userViewModel = userViewModel
+            )
         }
     }
+}
