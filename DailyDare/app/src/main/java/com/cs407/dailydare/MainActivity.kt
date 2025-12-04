@@ -47,7 +47,7 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
 
     /////// Sample user //////////////
     LaunchedEffect(Unit){
-    //    userViewModel.getUserData("SAMPLEUSER", {navController.navigate("Feed")})
+        //    userViewModel.getUserData("SAMPLEUSER", {navController.navigate("Feed")})
         val user = Firebase.auth.currentUser
         if (user != null){
             navController.navigate("Feed")
@@ -106,7 +106,9 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                 onNavigateToFriends = { navController.navigate("Friends") },
                 onNavigateToChallenge = { navController.navigate("Challenge") },
                 onNavigationToProfile = { navController.navigate("Profile") },
-                onNavigateToNotifications = { navController.navigate("Notifications") }
+                onNavigateToNotifications = { navController.navigate("Notifications") },
+                userViewModel = userViewModel,
+                userState = userState
             )
         }
         composable("Notifications") {
@@ -133,41 +135,41 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                 }
             )
         }
-            composable("Profile") {
-                ProfileScreen(
-                    userState = userState,
-                    onNavigateToHome = { navController.navigate("Feed") },
-                    onNavigateToFriends = { navController.navigate("Friends") },
-                    onNavigateToChallenge = { navController.navigate("Challenge") },
-                    onNavigateToNotifications = { navController.navigate("Notifications") },
-                    onNavigateToProfile = { navController.navigate("Profile") },
-                    onEditProfile = {},
-                    onLogout = {
-                        Firebase.auth.signOut()
-                        navController.navigate("SignIn") {
-                            // reset nav graph
-                            popUpTo(navController.graph.startDestinationId) {
-                                inclusive = true
-                            }
-                            launchSingleTop = true
+        composable("Profile") {
+            ProfileScreen(
+                userState = userState,
+                onNavigateToHome = { navController.navigate("Feed") },
+                onNavigateToFriends = { navController.navigate("Friends") },
+                onNavigateToChallenge = { navController.navigate("Challenge") },
+                onNavigateToNotifications = { navController.navigate("Notifications") },
+                onNavigateToProfile = { navController.navigate("Profile") },
+                onEditProfile = {},
+                onLogout = {
+                    Firebase.auth.signOut()
+                    navController.navigate("SignIn") {
+                        // reset nav graph
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
                         }
+                        launchSingleTop = true
                     }
-                )
-            }
-            composable("SignIn") {
-                SignInScreen(
-                    onNavigateToSignUp = { navController.navigate("SignUp") },
-                    onNavigateToHome = { navController.navigate("Feed") },
-                    userViewModel = userViewModel
+                }
+            )
+        }
+        composable("SignIn") {
+            SignInScreen(
+                onNavigateToSignUp = { navController.navigate("SignUp") },
+                onNavigateToHome = { navController.navigate("Feed") },
+                userViewModel = userViewModel
 
-                )
-            }
-            composable("SignUp") {
-                SignUpScreen(
-                    onNavigateToSignIn = { navController.navigate("SignIn") },
-                    onNavigateToProfile = { navController.navigate("Profile") },
-                    userViewModel = userViewModel
-                )
-            }
+            )
+        }
+        composable("SignUp") {
+            SignUpScreen(
+                onNavigateToSignIn = { navController.navigate("SignIn") },
+                onNavigateToProfile = { navController.navigate("Profile") },
+                userViewModel = userViewModel
+            )
         }
     }
+}
