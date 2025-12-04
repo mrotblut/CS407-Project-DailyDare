@@ -25,8 +25,8 @@ data class Post(
     )
 
 data class userFriend(
-    val uid: String,
-    val userName: String,
-    val userHandle: String,
-    val profilePicture: String
+    val uid: String = "",
+    val userName: String = "",
+    val userHandle: String = "",
+    val profilePicture: String = ""
 )

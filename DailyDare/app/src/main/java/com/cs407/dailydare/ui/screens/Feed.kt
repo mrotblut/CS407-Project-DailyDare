@@ -103,11 +103,13 @@ fun FeedScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        item {
-                            CurrentChallengeCard(
-                                challengeTitle = userState.currentChallenge.title,
-                                onChallengeClick = onNavigateToChallenge
-                            )
+                        if ("Challenge/${userState.currentChallenge.id}" !in userState.completedChallengesUri) {
+                            item {
+                                CurrentChallengeCard(
+                                    challengeTitle = userState.currentChallenge.title,
+                                    onChallengeClick = onNavigateToChallenge
+                                )
+                            }
                         }
 
                         if (posts.isEmpty()) {
@@ -137,6 +139,7 @@ fun FeedScreen(
                                 PostCard(
                                     post = post,
                                     onLikeClick = { postId ->
+                                        userViewModel.changeLikePost(postId)
                                         posts = posts.map {
                                             if (it.postId == postId) {
                                                 it.copy(
