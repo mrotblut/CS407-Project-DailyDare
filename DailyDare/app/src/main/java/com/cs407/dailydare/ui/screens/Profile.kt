@@ -238,7 +238,7 @@ fun ProfileHeader(
         Text(text = streakCount.toString(), fontSize = 14.sp, color = Color.Gray)
     }
 
-    Text(text = userHandle, fontSize = 16.sp, color = Color.Gray)
+    Text(text = '@'+userHandle, fontSize = 16.sp, color = Color.Gray)
 }
 @Composable
 fun StatsRow(streakCount: String, completedCount: String, friendsCount: String) {

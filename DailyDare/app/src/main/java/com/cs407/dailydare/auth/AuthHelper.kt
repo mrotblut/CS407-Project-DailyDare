@@ -1,5 +1,7 @@
 package com.cs407.dailydare.auth
 
+import com.cs407.dailydare.ViewModels.UserViewModel
+import com.cs407.dailydare.data.UserState
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
@@ -53,14 +55,12 @@ fun checkPassword(password: String):PasswordResult {
     return PasswordResult.Invalid
 }
 
-enum class SignInResult {
-    Error,
-}
-
 fun signIn(
     email: String,
     password: String,
-    onSignedIn: (UserState) -> Unit,
+    onSignedIn: () -> Unit,
+    userViewModel: UserViewModel,
+    error: () -> Unit
 ) {
     val auth = Firebase.auth
     auth.signInWithEmailAndPassword(email, password)
@@ -70,28 +70,25 @@ fun signIn(
                 if (user != null) {
                     val scope = CoroutineScope(Dispatchers.Main)
                     scope.launch {
-                        getUserData(uid = user.uid) { userState ->
-                            onSignedIn(userState)
-                        }
+                        userViewModel.getUserData(uid = user.uid, onSignedIn)
                     }
                 } else {
-                    onSignedIn(UserState())
+                    error()
                 }
             } else {
                 // if the task is not successful, sign in failed.
-                onSignedIn(UserState())
+                error()
             }
         }
 }
 
-enum class SignUpResult {
-    Error,
-}
 
 fun createAccount(
     email: String,
     password: String,
-    onAccountCreated: (UserState) -> Unit,
+    onAccountCreated: () -> Unit,
+    uvm: UserViewModel,
+    error: () -> Unit
 ){
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
     auth.createUserWithEmailAndPassword(email, password)
@@ -102,16 +99,14 @@ fun createAccount(
                     // successfully created user, now create their database entry
                     val scope = CoroutineScope(Dispatchers.Main)
                     scope.launch {
-                        createDbUser(uid = user.uid) { userState ->
-                            onAccountCreated(userState)
-                        }
+                        uvm.createDbUser(uid = user.uid, onAccountCreated)
                     }
                 } else {
-                    onAccountCreated(UserState())
+                    error()
                 }
             } else {
                 // If account creation fails (e.g., email already in use),
-                onAccountCreated(UserState())
+                error()
             }
         }
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.dailydare.R
+import com.cs407.dailydare.ViewModels.UserViewModel
 import com.cs407.dailydare.auth.EmailResult
 import com.cs407.dailydare.auth.PasswordResult
 import com.cs407.dailydare.auth.checkEmail
@@ -33,7 +34,8 @@ import com.google.firebase.auth.FirebaseUser
 @Composable
 fun SignInScreen(
     onNavigateToSignUp: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
+    userViewModel: UserViewModel
 ) {
     val backgroundColor = colorResource(id = R.color.app_background)
     val buttonColor = colorResource(id = R.color.button_primary)
@@ -78,7 +80,8 @@ fun SignInScreen(
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                placeholder = { Text("Email or Username") },
+                placeholder = { Text("Email") },
+                label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = TextFieldDefaults.colors(
@@ -99,6 +102,7 @@ fun SignInScreen(
                 value = password,
                 onValueChange = { password = it },
                 placeholder = { Text("Password") },
+                label = {Text("Password")},
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 visualTransformation = PasswordVisualTransformation(),
@@ -119,19 +123,12 @@ fun SignInScreen(
             LogInButton(
                 email = username.text,
                 password = password.text,
-                onSignedIn = { userState ->
-                    if (userState.uid.isNotEmpty()) { // Check if UID is not empty
-                        // user signed in, nav to home
-                        onNavigateToHome()
-                    } else {
-                        // Login failed, show a message to the user
-                        android.widget.Toast.makeText(context, "Login failed. Please check your credentials.", android.widget.Toast.LENGTH_SHORT).show()
-                        println("Login failed")
-                    }
-                },
+                onSignedIn = onNavigateToHome,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(56.dp),
+                error = {android.widget.Toast.makeText(context, "Login failed. Please check your credentials.", android.widget.Toast.LENGTH_SHORT).show()},
+                userViewModel = userViewModel
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -184,8 +181,10 @@ fun SignInScreen(
 fun LogInButton(
     email: String,
     password: String,
-    onSignedIn: (UserState) -> Unit,
-    modifier: Modifier = Modifier
+    onSignedIn: () -> Unit,
+    modifier: Modifier = Modifier,
+    userViewModel: UserViewModel,
+    error: () -> Unit
 ) {
     val context = LocalContext.current
     var loginInProgress by remember { mutableStateOf(false) }
@@ -226,10 +225,19 @@ fun LogInButton(
                 android.widget.Toast.makeText(context, errorString, android.widget.Toast.LENGTH_SHORT).show()
             } else {
                 loginInProgress = true
-                signIn(email, password) { userState ->
-                    loginInProgress = false
-                    onSignedIn(userState)
-                }
+                signIn(
+                    email,
+                    password,
+                    {
+                        loginInProgress = false
+                        onSignedIn()
+                    },
+                    userViewModel,
+                    {
+                        loginInProgress = false
+                        error()
+                    }
+                )
             }
         },
         enabled = !loginInProgress,
@@ -252,13 +260,4 @@ fun LogInButton(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SignInScreenPreview() {
-    SignInScreen(
-        onNavigateToSignUp = {},
-        onNavigateToHome = {}
-    )
 }

@@ -47,7 +47,12 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
 
     /////// Sample user //////////////
     LaunchedEffect(Unit){
-        userViewModel.getUserData("SAMPLEUSER", {navController.navigate("Feed")})
+    //    userViewModel.getUserData("SAMPLEUSER", {navController.navigate("Feed")})
+        val user = Firebase.auth.currentUser
+        if (user != null){
+            navController.navigate("Feed")
+            userViewModel.getUserData(user.uid,{navController.navigate("Feed")})
+        }
     }
     /////////////////////////////////
 
@@ -152,13 +157,16 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
             composable("SignIn") {
                 SignInScreen(
                     onNavigateToSignUp = { navController.navigate("SignUp") },
-                    onNavigateToHome = { navController.navigate("Feed") }
+                    onNavigateToHome = { navController.navigate("Feed") },
+                    userViewModel = userViewModel
 
                 )
             }
             composable("SignUp") {
                 SignUpScreen(
-                    onNavigateToSignIn = { navController.navigate("SignIn") }
+                    onNavigateToSignIn = { navController.navigate("SignIn") },
+                    onNavigateToProfile = { navController.navigate("Profile") },
+                    userViewModel = userViewModel
                 )
             }
         }

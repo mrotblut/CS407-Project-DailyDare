@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.tasks.await
+import okhttp3.internal.wait
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -155,6 +156,7 @@ class UserViewModel : ViewModel() {
         )
         db.collection("users").document(uid).set(fsUserState)
         setUser(userState)
+        Thread.sleep(2000)
         onSignedIn()
     }
 

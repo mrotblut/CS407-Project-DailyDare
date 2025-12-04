@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.dailydare.R // <-- Import your R file
+import com.cs407.dailydare.ViewModels.UserViewModel
 import com.cs407.dailydare.auth.EmailResult
 import com.cs407.dailydare.auth.PasswordResult
 import com.cs407.dailydare.auth.checkEmail
@@ -35,6 +37,8 @@ import com.cs407.dailydare.data.UserState
 @Composable
 fun SignUpScreen(
     onNavigateToSignIn: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+    userViewModel: UserViewModel
 ) {
     val backgroundColor = colorResource(id = R.color.app_background)
     val buttonColor = colorResource(id = R.color.button_primary)
@@ -94,7 +98,8 @@ fun SignUpScreen(
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                placeholder = { Text("Email or Username") },
+                placeholder = { Text("Email") },
+                label = {Text("Email")},
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = TextFieldDefaults.colors(
@@ -115,6 +120,7 @@ fun SignUpScreen(
                 value = password,
                 onValueChange = { password = it },
                 placeholder = { Text("Password") },
+                label = {Text("Password")},
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 visualTransformation = PasswordVisualTransformation(),
@@ -136,6 +142,7 @@ fun SignUpScreen(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
                 placeholder = { Text("Confirm Password") },
+                label = {Text("Confirm Password")},
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 visualTransformation = PasswordVisualTransformation(),
@@ -157,19 +164,12 @@ fun SignUpScreen(
                 email = username.text,
                 password = password.text,
                 confirmPassword = confirmPassword.text,
-                onAccountCreated = { userState ->
-                    if (userState.uid.isNotEmpty()) { // Check if UID is not empty
-                        // user signed in, nav to home
-                        onNavigateToSignIn()
-                    } else {
-                        // Login failed, show a message to the user
-                        android.widget.Toast.makeText(context, "Login failed. Please check your credentials.", android.widget.Toast.LENGTH_SHORT).show()
-                        println("Login failed")
-                    }
-                },
+                onAccountCreated = onNavigateToProfile,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(56.dp),
+                userViewModel = userViewModel,
+                error = {android.widget.Toast.makeText(context, "Signup failed. Do you already have an account?", android.widget.Toast.LENGTH_SHORT).show()}
             )
         }
     }
@@ -180,8 +180,10 @@ fun SignUpButton(
     email: String,
     password: String,
     confirmPassword: String,
-    onAccountCreated: (UserState) -> Unit,
-    modifier: Modifier = Modifier
+    onAccountCreated: () -> Unit,
+    modifier: Modifier = Modifier,
+    userViewModel: UserViewModel,
+    error: () -> Unit
 ) {
     val context = LocalContext.current
     var signUpProgress by remember { mutableStateOf(false) }
@@ -226,10 +228,10 @@ fun SignUpButton(
                 android.widget.Toast.makeText(context, errorString, android.widget.Toast.LENGTH_SHORT).show()
             } else {
                 signUpProgress = true
-                createAccount(email, password) { userState ->
+                createAccount(email, password, {
                     signUpProgress = false
-                    onAccountCreated(userState)
-                }
+                    onAccountCreated()
+                },userViewModel,error)
             }
         },
         enabled = !signUpProgress,
@@ -252,12 +254,4 @@ fun SignUpButton(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SignUpScreenPreview() {
-    SignUpScreen(
-        onNavigateToSignIn = {},
-    )
 }
