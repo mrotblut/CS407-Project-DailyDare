@@ -31,6 +31,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
 import com.cs407.dailydare.ui.components.BottomNavigationBar
 import com.cs407.dailydare.data.UserState
+import com.cs407.dailydare.utils.formatRelativeTime
 import com.cs407.dailydare.data.getFeedPosts
 import com.cs407.dailydare.data.firestoreUserChallenges
 import com.google.firebase.Firebase
@@ -264,7 +265,7 @@ fun FeedPostCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = post.userName,
                         fontSize = 16.sp,
@@ -277,6 +278,12 @@ fun FeedPostCard(
                         color = Color.Gray
                     )
                 }
+
+                Text(
+                    text = formatRelativeTime(post.timestamp),
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
