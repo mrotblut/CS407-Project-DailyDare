@@ -40,12 +40,14 @@ import com.cs407.dailydare.ViewModels.UserViewModel
 import com.cs407.dailydare.data.Post
 import com.cs407.dailydare.ui.components.BottomNavigationBar
 import com.cs407.dailydare.ui.components.TopNavigationBar
+import java.util.Date
 
 data class Notification(
     val id: Int,
     val message: String,
     val time: String,
-    val icon: Int
+    val icon: Int,
+    val date: Date
 )
 @Composable
 fun NotificationsScreen(onNavigateToHome: () -> Unit, onNavigateToChallenge:() -> Unit, onNavigateToFriends:() -> Unit, onNavigateToNotifications:() -> Unit, onNavigationToProfile:() -> Unit, userViewModel: UserViewModel){

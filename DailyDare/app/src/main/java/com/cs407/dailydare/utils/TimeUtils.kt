@@ -1,11 +1,11 @@
 package com.cs407.dailydare.utils
 
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
-fun formatRelativeTime(timestamp: Long): String {
+fun formatRelativeTime(timestamp: Date): String {
     val now = System.currentTimeMillis()
-    val diff = now - timestamp
-
+    val diff = now - timestamp.time
     return when {
         diff < TimeUnit.MINUTES.toMillis(1) -> "just now"
         diff < TimeUnit.HOURS.toMillis(1) -> {

@@ -262,7 +262,7 @@ fun PostCard(
                 }
 
                 Text(
-                    text = formatRelativeTime(post.timestamp),
+                    text = formatRelativeTime(post.date),
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -319,6 +319,9 @@ fun PostCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val liked = remember { mutableStateOf(post.isLiked) }
+            val likes = remember{ mutableIntStateOf(post.likes) }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -328,17 +331,26 @@ fun PostCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     IconButton(
-                        onClick = { onLikeClick(post.postId) }
+                        onClick = {
+                            onLikeClick(post.postId)
+                            if (liked.value){
+                                liked.value = false
+                                likes.intValue--
+                            } else{
+                                liked.value = true
+                                likes.intValue++
+                            }
+                        }
                     ) {
                         Icon(
-                            imageVector = if (post.isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            imageVector = if (liked.value) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                             contentDescription = "Like",
-                            tint = if (post.isLiked) Color.Red else Color.Gray,
+                            tint = if (liked.value) Color.Red else Color.Gray,
                             modifier = Modifier.size(24.dp)
                         )
                     }
                     Text(
-                        text = post.likes.toString(),
+                        text = likes.intValue.toString(),
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
