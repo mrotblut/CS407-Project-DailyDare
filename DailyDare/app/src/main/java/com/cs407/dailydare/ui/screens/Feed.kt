@@ -34,6 +34,7 @@ import com.cs407.dailydare.data.Post
 import com.cs407.dailydare.ui.components.BottomNavigationBar
 import com.cs407.dailydare.ui.components.TopNavigationBar
 import com.cs407.dailydare.data.UserState
+import com.cs407.dailydare.utils.formatRelativeTime
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -246,7 +247,7 @@ fun PostCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = post.userName,
                         fontSize = 16.sp,
@@ -259,6 +260,12 @@ fun PostCard(
                         color = Color.Gray
                     )
                 }
+
+                Text(
+                    text = formatRelativeTime(post.timestamp),
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))

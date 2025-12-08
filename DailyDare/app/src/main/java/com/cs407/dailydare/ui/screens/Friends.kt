@@ -38,6 +38,7 @@ import com.cs407.dailydare.data.userFriend
 import com.cs407.dailydare.ui.components.BottomNavigationBar
 import com.cs407.dailydare.ui.components.TopNavigationBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsScreen(
     onNavigateToHome: () -> Unit,
@@ -59,7 +60,6 @@ fun FriendsScreen(
 
     val focusManager = LocalFocusManager.current
 
-    // Use data directly from userState (already loaded on login)
     val friendsList = userState.friendsUserStates
     val friendRequests = userState.friendRequest
 
@@ -68,7 +68,6 @@ fun FriendsScreen(
             isSearching = true
             hasSearched = true
             userViewModel.searchFriends(searchQuery) { results ->
-                // Filter out current user and existing friends
                 val filtered = results.filter { user ->
                     user.uid != userState.uid &&
                             user.uid !in userState.friendsUID
@@ -106,7 +105,6 @@ fun FriendsScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Search Bar
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SearchBar(
@@ -125,7 +123,6 @@ fun FriendsScreen(
                 )
             }
 
-            // Search Results Section
             if (hasSearched || isSearching) {
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -180,7 +177,6 @@ fun FriendsScreen(
                 }
             }
 
-            // Friend Requests Section
             if (friendRequests.isNotEmpty()) {
                 item {
                     Text(
@@ -212,7 +208,6 @@ fun FriendsScreen(
                 }
             }
 
-            // Friends List Section
             item {
                 Text(
                     text = "My Friends (${friendsList.size})",
@@ -250,7 +245,6 @@ fun FriendsScreen(
                 }
             }
 
-            // Bottom spacing
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -496,7 +490,6 @@ fun FriendRequestItem(
             }
 
             Row {
-                // Accept Button
                 IconButton(
                     onClick = onAccept,
                     modifier = Modifier
@@ -516,7 +509,6 @@ fun FriendRequestItem(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Decline Button
                 IconButton(
                     onClick = onDecline,
                     modifier = Modifier
