@@ -16,7 +16,6 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.DailyDare">
-
         <activity
             android:name="com.cs407.dailydare.MainActivity"
             android:exported="true">

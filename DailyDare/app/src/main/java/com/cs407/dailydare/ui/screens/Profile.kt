@@ -1,14 +1,13 @@
 package com.cs407.dailydare.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,12 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.cs407.dailydare.R
 import com.cs407.dailydare.data.Challenge
 import com.cs407.dailydare.data.UserState
 import com.cs407.dailydare.ui.components.BottomNavigationBar
 import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 
@@ -46,14 +45,43 @@ fun ProfileScreen(
     onNavigateToFriends: () -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigateToProfile:() -> Unit,
-    onEditProfile: () -> Unit
+    onEditProfile: () -> Unit,
+    onLogout: () -> Unit
 ) {
     var selectedTab by remember { mutableStateOf("Completed") }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     val challengesToShow = if (selectedTab == "Completed") {
         userState.completedChallenges
     } else {
-        listOf(userState.currentChallenges)
+        listOf(userState.currentChallenge)
     }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Log Out") },
+            text = { Text("Are you sure you want to log out?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showLogoutDialog = false }
+                ) {
+                    Text("No")
+                }
+            }
+        )
+    }
+
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -67,28 +95,26 @@ fun ProfileScreen(
         },
         containerColor = colorResource(id = R.color.app_background)
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(colorResource(id = R.color.app_background))
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(colorResource(id = R.color.app_background))
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Spacer to provide room for the logout button at the top
+                item { Spacer(modifier = Modifier.height(60.dp)) }
+
                 // Profile Header
                 item {
                     ProfileHeader(
                         userName = userState.userName,
                         userHandle = userState.userHandle,
-                        profilePicture = userState.profilePicture,
+                        profilePicture = if(userState.profilePicUrl.isEmpty()){painterResource(R.drawable.default_user)}else{rememberAsyncImagePainter(model = userState.profilePicUrl)},
                         onEditClick = onEditProfile,
                         streakCount = userState.streakCount
                     )
@@ -115,12 +141,14 @@ fun ProfileScreen(
                             color = Color.Black
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-
-                        // Complete and current Buttons
                         Row {
-                            TabButton("Completed", selectedTab == "Completed") { selectedTab = "Completed" }
+                            TabButton("Completed", selectedTab == "Completed") {
+                                selectedTab = "Completed"
+                            }
                             Spacer(modifier = Modifier.width(8.dp))
-                            TabButton("Current", selectedTab == "Current") { selectedTab = "Current" }
+                            TabButton("Current", selectedTab == "Current") {
+                                selectedTab = "Current"
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -130,17 +158,32 @@ fun ProfileScreen(
                     item {
                         Text("No challenges to display", color = Color.Gray)
                     }
-                }
-                else {
+                } else {
                     items(challengesToShow) { challenge ->
                         ChallengeCard(
-                            imageRes = challenge.imageRes,
+                            imageRes = challenge.imageLink,
                             title = challenge.title,
                             date = challenge.date
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
                 }
+            }
+            // Logout button
+            FloatingActionButton(
+                onClick = { showLogoutDialog = true },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(20.dp)
+                    .size(52.dp),
+                shape = CircleShape,
+                containerColor = Color.Red,
+                contentColor = Color.White
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = "Log Out"
+                )
             }
         }
     }
@@ -151,14 +194,14 @@ fun ProfileScreen(
 fun ProfileHeader(
     userName: String,
     userHandle: String,
-    profilePicture: Painter?,
+    profilePicture: Painter,
     streakCount: Int,
     onEditClick: () -> Unit
 ) {
     val buttonColor = colorResource(id = R.color.button_primary)
     Box(contentAlignment = Alignment.TopCenter) {
         Image(
-            painter = profilePicture ?: painterResource(id = R.drawable.default_user),
+            painter = profilePicture,
             contentDescription = "Profile Picture",
             modifier = Modifier
                 .size(120.dp)
@@ -195,7 +238,7 @@ fun ProfileHeader(
         Text(text = streakCount.toString(), fontSize = 14.sp, color = Color.Gray)
     }
 
-    Text(text = userHandle, fontSize = 16.sp, color = Color.Gray)
+    Text(text = '@'+userHandle, fontSize = 16.sp, color = Color.Gray)
 }
 @Composable
 fun StatsRow(streakCount: String, completedCount: String, friendsCount: String) {
@@ -244,7 +287,7 @@ fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun ChallengeCard(imageRes: Int, title: String, date: Date) {
+fun ChallengeCard(imageRes: String, title: String, date: Date) {
     val pattern = "EEE MMM dd yyyy"
     val simpleDateFormat = SimpleDateFormat(pattern, Locale.ENGLISH)
     Card(
@@ -258,7 +301,7 @@ fun ChallengeCard(imageRes: Int, title: String, date: Date) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = imageRes),
+                painter = rememberAsyncImagePainter(model = imageRes),
                 contentDescription = title,
                 modifier = Modifier
                     .size(60.dp)
@@ -281,13 +324,13 @@ fun ChallengeCard(imageRes: Int, title: String, date: Date) {
 fun ProfileScreenPreview() {
     val format = SimpleDateFormat("yyyy-MM-dd")
     val sampleCompletedChallenges = listOf(
-        Challenge(1, "Do 10 jumping jacks in a funny place", format.parse("2025-10-31")!!, R.drawable.wireframe,""),
-        Challenge(2, "Recreate a famous movie scene", format.parse("2025-10-30")!!, R.drawable.wireframe,""),
-        Challenge(3, "Build a pillow fort", format.parse("2025-10-29")!!, R.drawable.wireframe,"")
+        Challenge(1, "Do 10 jumping jacks in a funny place", format.parse("2025-10-31")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg",""),
+        Challenge(2, "Recreate a famous movie scene", format.parse("2025-10-30")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg",""),
+        Challenge(3, "Build a pillow fort", format.parse("2025-10-29")!!, "https://i.ibb.co/Hpn6Q27v/jump.jpg","")
     )
 
     val sampleCurrentChallenge = Challenge(4, "Try a new hobby for 1 hour",
-        format.parse("2025-11-15")!!, R.drawable.wireframe,"Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
+        format.parse("2025-11-15")!!, "https://centralca.cdn-anvilcms.net/media/images/2021/11/24/images/Ideal_Hobbies_pix_11-24-21.max-2400x1350.jpg","Let's get moving! Show us your best jumping jacks form. How many can you do in 30 seconds?")
 
 
     val sampleUser = UserState(
@@ -297,8 +340,7 @@ fun ProfileScreenPreview() {
         completedCount = sampleCompletedChallenges.size,
         friendsCount = 12,
         completedChallenges = sampleCompletedChallenges,
-        currentChallenges = sampleCurrentChallenge,
-        profilePicture = painterResource(id = R.drawable.default_user)
+        currentChallenge = sampleCurrentChallenge,
     )
 
     ProfileScreen(
@@ -308,6 +350,7 @@ fun ProfileScreenPreview() {
         onNavigateToFriends = {},
         onNavigateToNotifications = {},
         onNavigateToProfile = {},
-        onEditProfile = {}
+        onEditProfile = {},
+        onLogout = {}
     )
 }

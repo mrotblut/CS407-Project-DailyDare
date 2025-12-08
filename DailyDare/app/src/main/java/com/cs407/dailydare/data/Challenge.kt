@@ -6,7 +6,7 @@ data class Challenge(
     val id: Int = 0,
     val title: String = "",
     val date: Date = Date(),
-    val imageRes: Int = 2130968626,
+    val imageLink: String = "",
     val description: String = ""
 )
 
@@ -18,5 +18,15 @@ data class Post(
     val date: Date,
     val contentUri: String,
     val likes: Int,
-    var isLiked: Boolean
+    var isLiked: Boolean,
+    val userName: String,
+    val userHandle: String,
+    val profilePicture: String,
     )
+
+data class userFriend(
+    val uid: String = "",
+    val userName: String = "",
+    val userHandle: String = "",
+    val profilePicture: String = ""
+)
