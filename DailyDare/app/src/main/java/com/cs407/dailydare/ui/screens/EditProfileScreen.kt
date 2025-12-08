@@ -117,7 +117,10 @@ fun EditProfileScreen(
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedMediaUri = uri
+        if (uri != null){
+            selectedMediaUri = uri
+        }
+
     }
 
 
