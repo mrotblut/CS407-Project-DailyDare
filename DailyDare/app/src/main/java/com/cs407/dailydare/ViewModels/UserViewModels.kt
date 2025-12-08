@@ -489,10 +489,27 @@ class UserViewModel : ViewModel() {
             if (docs.isSuccessful){
                 if (docs.result.size() != 1){
                     Log.w("Remove Friend", "Error Removing, got ${docs.result.size()} documents returned")
+                    val docRefRequest = db.collection("friends").whereEqualTo("uid",listOf(userState.value.uid,friendUID))
+                    docRefRequest.get().addOnCompleteListener { docs ->
+                        if (docs.isSuccessful){
+                            if (docs.result.size() != 1) {
+                                Log.e(
+                                    "Remove Friend",
+                                    "Error Removing, got ${docs.result.size()} documents returned"
+                                )
+                            } else{
+                                val doc = docs.result.documents[0]
+                                db.collection("friends").document(doc.id).delete()
+                                scope.launch { updateFriends() }
+                            }
+                        }
+                    }
+                } else{
+                    val doc = docs.result.documents[0]
+                    db.collection("friends").document(doc.id).delete()
+                    scope.launch { updateFriends() }
                 }
-                val doc = docs.result.documents[0]
-                db.collection("friends").document(doc.id).delete()
-                scope.launch { updateFriends() }
+
 
             }
 
