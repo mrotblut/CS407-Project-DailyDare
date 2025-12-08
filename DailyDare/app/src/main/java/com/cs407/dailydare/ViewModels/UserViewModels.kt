@@ -21,9 +21,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import okhttp3.internal.wait
 import java.text.SimpleDateFormat
@@ -146,7 +149,8 @@ class UserViewModel : ViewModel() {
             completedChallengesUri = emptyList(),
             friendsUserStates =  emptyList(),
             friendRequest = emptyList(),
-            feed = emptyList()
+            feed = emptyList(),
+            firstSignIn = true
         )
         val fsUserState = firestoreUser(
             uid = userState.uid,
@@ -476,6 +480,26 @@ class UserViewModel : ViewModel() {
             setUser(newUserState)
         }
     }
+
+    fun removeFriend(friendUID: String){
+        val scope = CoroutineScope(Dispatchers.Default)
+        val db = Firebase.firestore
+        val docRefRequest = db.collection("friends").whereEqualTo("uid",listOf(friendUID,userState.value.uid))
+        docRefRequest.get().addOnCompleteListener { docs ->
+            if (docs.isSuccessful){
+                if (docs.result.size() != 1){
+                    Log.w("Remove Friend", "Error Removing, got ${docs.result.size()} documents returned")
+                }
+                val doc = docs.result.documents[0]
+                db.collection("friends").document(doc.id).delete()
+                scope.launch { updateFriends() }
+
+            }
+
+        }
+
+    }
+
     fun updateProfile(userName: String, userHandle: String, imageUrl: String){
         val newUserState = UserState(
             userState.value.uid,
@@ -498,10 +522,22 @@ class UserViewModel : ViewModel() {
     }
 
     fun createNotification(uid:String,type:String,message:String){
+        val format = DateTimeFormatter.ofPattern("yyyyMMdd")
+        val docName = if(type == "NEWLIKE"){
+            "LIKE-${userState.value.uid}-${uid}-${LocalDate.now().format(format)}"
+        }else if (type == "FRIENDREQUEST"){
+            "FRIEND-${userState.value.uid}-$uid"
+        }else if(type == "NEWFRIEND"){
+            "FRIEND-$uid-${userState.value.uid}"
+        } else if(type == "STREAK"){
+            "STREAK-$uid-${LocalDate.now().format(format)}"
+        }else{
+            "UNKNOWN-$uid-${LocalDateTime.now()}"
+        }
         val db = Firebase.firestore
         val docRef = db.collection("Notifications")
         val notification = firestoreNotification(message, Date(),type,uid)
-        docRef.add(notification)
+        docRef.document(docName).set(notification)
     }
 
     fun getNotifications(callback: (List<Notification>) -> Unit){
@@ -541,6 +577,7 @@ class UserViewModel : ViewModel() {
                     }
                 val notification = Notification(
                     id = notifications.size + 1,
+                    date = fsNotification.date,
                     message = fsNotification.message,
                     time = timeString,
                     icon = icon
@@ -549,6 +586,7 @@ class UserViewModel : ViewModel() {
 
 
             }
+            notifications.sortByDescending { it.date }
             callback(notifications.toList())
         }
     }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -241,7 +242,7 @@ fun FriendsScreen(
                 }
             } else {
                 items(friendsList, key = { it.uid }) { friend ->
-                    FriendItem(friend = friend)
+                    FriendItem(friend = friend, {uid -> userViewModel.removeFriend(uid)})
                 }
             }
 
@@ -266,7 +267,7 @@ fun SearchBar(
             value = query,
             onValueChange = onQueryChange,
             modifier = Modifier.weight(1f),
-            placeholder = { Text("Search by username or handle...") },
+            placeholder = { Text("username or handle...") },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -313,19 +314,21 @@ fun SearchBar(
 }
 
 @Composable
-fun FriendItem(friend: userFriend) {
+fun FriendItem(friend: userFriend, onRemove: (String) -> Unit) {
     val defaultUser = painterResource(id = R.drawable.default_user)
     val profileImage: Painter = if (friend.profilePicture.isNotEmpty()) {
         rememberAsyncImagePainter(model = friend.profilePicture)
     } else {
         defaultUser
     }
-
+    val expand = remember{ mutableStateOf(false)}
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = {expand.value = !expand.value},
+
     ) {
         Row(
             modifier = Modifier
@@ -357,6 +360,24 @@ fun FriendItem(friend: userFriend) {
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
+            }
+        }
+        if (expand.value) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    onClick = { onRemove(friend.uid) },
+                    colors = ButtonColors(Color(0xFFE53935),Color.White,Color(0xFFE53935),Color.White)
+                ) {
+                    Text(
+                        text = "Remove Friend"
+                    )
+                }
             }
         }
     }

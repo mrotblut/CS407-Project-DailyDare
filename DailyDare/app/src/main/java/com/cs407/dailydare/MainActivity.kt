@@ -51,7 +51,6 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
         //    userViewModel.getUserData("SAMPLEUSER", {navController.navigate("Feed")})
         val user = Firebase.auth.currentUser
         if (user != null){
-            navController.navigate("Feed")
             userViewModel.getUserData(user.uid,{navController.navigate("Feed")})
         }
     }
@@ -64,14 +63,21 @@ fun AppNavigation(userViewModel: UserViewModel = viewModel()) {
                     inclusive = true
                 }
             }
-        } else {
-            navController.navigate("Feed") {
+        } else if (userState.firstSignIn) {
+            navController.navigate("EditProfile") {
                 popUpTo(navController.graph.findStartDestination().id) {
                     inclusive = true
                 }
             }
+        } else
+            {
+                navController.navigate("Feed") {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        inclusive = true
+                    }
+                }
+            }
         }
-    }
 
     NavHost(
         navController = navController,
